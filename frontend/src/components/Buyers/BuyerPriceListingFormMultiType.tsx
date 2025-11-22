@@ -1,0 +1,515 @@
+import React, { useState } from 'react';
+import { 
+  DollarSign, 
+  Phone, 
+  MapPin, 
+  FileText, 
+  Calendar,
+  CheckCircle,
+  AlertCircle,
+  Building,
+  Mail,
+  Plus,
+  Upload,
+  X,
+  Image as ImageIcon
+} from 'lucide-react';
+
+interface AbacaClass {
+  enabled: boolean;
+  price: string;
+  image: string;
+}
+
+interface PriceListing {
+  company_name: string;
+  contact_person: string;
+  phone: string;
+  email: string;
+  location: string;
+  municipality: string;
+  barangay: string;
+  class_a: AbacaClass;
+  class_b: AbacaClass;
+  class_c: AbacaClass;
+  payment_terms: string;
+  requirements: string;
+  availability: string;
+  valid_until: string;
+}
+
+const BuyerPriceListingFormMultiType: React.FC = () => {
+  const [formData, setFormData] = useState<PriceListing>({
+    company_name: '',
+    contact_person: '',
+    phone: '',
+    email: '',
+    location: '',
+    municipality: '',
+    barangay: '',
+    class_a: { enabled: false, price: '', image: '' },
+    class_b: { enabled: false, price: '', image: '' },
+    class_c: { enabled: false, price: '', image: '' },
+    payment_terms: '',
+    requirements: '',
+    availability: 'Available',
+    valid_until: ''
+  });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const paymentTermsOptions = [
+    'Cash on Delivery',
+    'Cash on Pickup',
+    '7 Days',
+    '15 Days',
+    '30 Days',
+    'Negotiable'
+  ];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTypeToggle = (type: 't1' | 't2' | 't3') => {
+    setFormData(prev => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        enabled: !prev[type].enabled
+      }
+    }));
+  };
+
+  const handleTypeChange = (type: 't1' | 't2' | 't3', field: 'price', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate at least one type is enabled
+    if (!formData.t1.enabled && !formData.t2.enabled && !formData.t3.enabled) {
+      setMessage({ type: 'error', text: 'Please enable at least one abaca type (T1, T2, or T3)' });
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage(null);
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      // Transform data for API
+      const apiData = {
+        company_name: formData.company_name,
+        contact_person: formData.contact_person,
+        phone: formData.phone,
+        email: formData.email,
+        location: formData.location,
+        municipality: formData.municipality,
+        barangay: formData.barangay,
+        t1_enabled: formData.t1.enabled,
+        t1_price: formData.t1.enabled ? formData.t1.price : null,
+        t2_enabled: formData.t2.enabled,
+        t2_price: formData.t2.enabled ? formData.t2.price : null,
+        t3_enabled: formData.t3.enabled,
+        t3_price: formData.t3.enabled ? formData.t3.price : null,
+        payment_terms: formData.payment_terms,
+        requirements: formData.requirements,
+        availability: formData.availability,
+        valid_until: formData.valid_until
+      };
+
+      const response = await fetch('http://localhost:3001/api/buyer-listings/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(apiData)
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Price listing created successfully! Farmers, MAO, associations, and CUSAFA can now see your offer.' });
+        // Reset form
+        setFormData({
+          company_name: '',
+          contact_person: '',
+          phone: '',
+          email: '',
+          location: '',
+          municipality: '',
+          barangay: '',
+          t1: { enabled: false, price: '' },
+          t2: { enabled: false, price: '' },
+          t3: { enabled: false, price: '' },
+          payment_terms: '',
+          requirements: '',
+          availability: 'Available',
+          valid_until: ''
+        });
+      } else {
+        throw new Error('Failed to create listing');
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to create listing. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const renderTypeCard = (type: 't1' | 't2' | 't3', label: string, description: string, color: string) => {
+    const typeData = formData[type];
+    
+    return (
+      <div className={`border-2 rounded-2xl p-5 transition-all ${
+        typeData.enabled 
+          ? `border-${color}-500 bg-${color}-50` 
+          : 'border-gray-200 bg-gray-50'
+      }`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleTypeToggle(type)}
+              className={`p-2 rounded-xl transition-all ${
+                typeData.enabled 
+                  ? `bg-${color}-500 text-white` 
+                  : 'bg-gray-300 text-gray-600'
+              }`}
+            >
+              {typeData.enabled ? <CheckCircle size={20} /> : <Plus size={20} />}
+            </button>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{label}</h3>
+              <p className="text-sm text-gray-600">{description}</p>
+            </div>
+          </div>
+        </div>
+
+        {typeData.enabled && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Price per KG (₱) <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 font-semibold">₱</span>
+              <input
+                type="number"
+                value={typeData.price}
+                onChange={(e) => handleTypeChange(type, 'price', e.target.value)}
+                required={typeData.enabled}
+                step="0.01"
+                min="0"
+                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Price Listing</h1>
+        <p className="text-gray-600">Post your buying price and requirements. This will be visible to all farmers, MAO, associations, and CUSAFA.</p>
+      </div>
+
+      {/* Success/Error Message */}
+      {message && (
+        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
+          message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+          <span className="font-medium">{message.text}</span>
+        </div>
+      )}
+
+      {/* Info Banner */}
+      <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+          <div>
+            <p className="text-blue-900 font-semibold mb-1">Public Listing</p>
+            <p className="text-blue-800 text-sm">
+              Your price listing will be publicly visible to all farmers, associations, MAO officers, and CUSAFA. 
+              Make sure to provide accurate information and keep your contact details updated.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Company Information Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Building className="text-blue-600" size={24} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Company Information</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Company Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="company_name"
+                value={formData.company_name}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter company name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Contact Person <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="contact_person"
+                value={formData.contact_person}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter contact person name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="+63 912 345 6789"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="email@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Municipality <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="municipality"
+                value={formData.municipality}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter municipality"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Barangay <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="barangay"
+                value={formData.barangay}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter barangay"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Complete Address/Location <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
+                <textarea
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={2}
+                  placeholder="Enter complete address or landmark"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Abaca Types Pricing Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-emerald-100 rounded-xl">
+              <DollarSign className="text-emerald-600" size={24} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Abaca Types & Pricing</h2>
+              <p className="text-sm text-gray-600">Enable and set prices for the abaca types you want to buy</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {renderTypeCard('t1', 'Type 1 (T1)', 'Premium quality abaca fiber', 'emerald')}
+            {renderTypeCard('t2', 'Type 2 (T2)', 'Standard quality abaca fiber', 'blue')}
+            {renderTypeCard('t3', 'Type 3 (T3)', 'Basic quality abaca fiber', 'amber')}
+          </div>
+        </div>
+
+        {/* Payment & Terms Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <FileText className="text-purple-600" size={24} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Payment Terms & Requirements</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Payment Terms <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="payment_terms"
+                value={formData.payment_terms}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">Select payment terms</option>
+                {paymentTermsOptions.map(term => (
+                  <option key={term} value={term}>{term}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Availability Status <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="availability"
+                value={formData.availability}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="Available">Available - Actively Buying</option>
+                <option value="Limited">Limited - Low Demand</option>
+                <option value="Not Buying">Not Buying - Temporarily Closed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Valid Until <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="date"
+                  name="valid_until"
+                  value={formData.valid_until}
+                  onChange={handleInputChange}
+                  required
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Requirements & Specifications
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 text-gray-400" size={18} />
+                <textarea
+                  name="requirements"
+                  value={formData.requirements}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={4}
+                  placeholder="Enter your specific requirements (e.g., moisture content, fiber length, color, packaging, delivery preferences, etc.)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="px-8 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-semibold"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50 flex items-center gap-2"
+          >
+            {submitting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Creating...
+              </>
+            ) : (
+              <>
+                <CheckCircle size={20} />
+                Create Price Listing
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default BuyerPriceListingFormMultiType;

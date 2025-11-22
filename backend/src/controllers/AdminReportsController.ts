@@ -1,0 +1,244 @@
+import { Request, Response } from 'express';
+import { supabase } from '../config/supabase';
+
+/**
+ * Admin Reports Controller
+ * Handles data-driven reports for admin dashboard
+ */
+export class AdminReportsController {
+  /**
+   * GET /api/admin/production-report
+   * Get production statistics (seedlings, planting, harvest)
+   */
+  static async getProductionReport(req: Request, res: Response) {
+    try {
+      // 1. Total Seedlings Received (from association_seedling_distributions)
+      const { data: associationDistributions, error: assocError } = await supabase
+        .from('association_seedling_distributions')
+        .select('quantity_distributed');
+      
+      const totalSeedlingsReceived = associationDistributions?.reduce(
+        (sum, d) => sum + (d.quantity_distributed || 0), 0
+      ) || 0;
+
+      // 2. Total Seedlings Distributed to Farmers (from farmer_seedling_distributions)
+      const { data: farmerDistributions, error: farmerError } = await supabase
+        .from('farmer_seedling_distributions')
+        .select('quantity_distributed');
+      
+      const totalSeedlingsDistributed = farmerDistributions?.reduce(
+        (sum, d) => sum + (d.quantity_distributed || 0), 0
+      ) || 0;
+
+      // 3. Total Seedlings Planted (status = 'planted')
+      const { data: plantedSeedlings, error: plantedError } = await supabase
+        .from('farmer_seedling_distributions')
+        .select('quantity_distributed')
+        .eq('status', 'planted');
+      
+      const totalSeedlingsPlanted = plantedSeedlings?.reduce(
+        (sum, d) => sum + (d.quantity_distributed || 0), 0
+      ) || 0;
+
+      // 4. Total Area Planted (from harvests)
+      const { data: harvests, error: harvestsError } = await supabase
+        .from('harvests')
+        .select('area_hectares');
+      
+      const totalAreaPlanted = harvests?.reduce(
+        (sum, h) => sum + (parseFloat(h.area_hectares) || 0), 0
+      ) || 0;
+
+      // 5. Total Harvest Fiber (ALL harvests regardless of status)
+      const { data: allHarvests, error: allHarvestsError } = await supabase
+        .from('harvests')
+        .select('dry_fiber_output_kg');
+      
+      const totalHarvestFiber = allHarvests?.reduce(
+        (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
+      ) || 0;
+
+      // 6. Actual Harvested Fiber (from harvests with status 'Verified' or 'In Inventory')
+      const { data: verifiedHarvests, error: verifiedError } = await supabase
+        .from('harvests')
+        .select('dry_fiber_output_kg')
+        .in('status', ['Verified', 'In Inventory', 'Delivered', 'Sold']);
+      
+      const actualHarvested = verifiedHarvests?.reduce(
+        (sum, h) => sum + (parseFloat(h.dry_fiber_output_kg) || 0), 0
+      ) || 0;
+
+      // 7. Field Monitoring Statistics
+      const { count: totalMonitoringVisits } = await supabase
+        .from('monitoring_records')
+        .select('*', { count: 'exact', head: true });
+
+      // Count farms monitored (unique farmer_ids)
+      const { data: monitoredFarms } = await supabase
+        .from('monitoring_records')
+        .select('farmer_id');
+      
+      const uniqueFarmsMonitored = new Set(monitoredFarms?.map(m => m.farmer_id) || []).size;
+
+      // Recent monitoring visits (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { count: recentMonitoringVisits } = await supabase
+        .from('monitoring_records')
+        .select('*', { count: 'exact', head: true })
+        .gte('date_of_visit', thirtyDaysAgo.toISOString().split('T')[0]);
+
+      res.status(200).json({
+        totalSeedlingsReceived,
+        totalSeedlingsDistributed,
+        totalSeedlingsPlanted,
+        totalAreaPlanted: Math.round(totalAreaPlanted * 100) / 100, // Round to 2 decimals
+        totalHarvestFiber: Math.round(totalHarvestFiber * 100) / 100,
+        actualHarvested: Math.round(actualHarvested * 100) / 100,
+        totalMonitoringVisits: totalMonitoringVisits || 0,
+        farmsMonitored: uniqueFarmsMonitored,
+        recentMonitoringVisits: recentMonitoringVisits || 0
+      });
+    } catch (error) {
+      console.error('Error fetching production report:', error);
+      res.status(500).json({ error: 'Failed to fetch production report' });
+    }
+  }
+
+  /**
+   * GET /api/admin/sales-report
+   * Get sales statistics and recent transactions
+   */
+  static async getSalesReport(req: Request, res: Response) {
+    try {
+      // Get all approved sales reports with farmer info
+      const { data: salesReports, error: salesError } = await supabase
+        .from('sales_reports')
+        .select(`
+          report_id,
+          sale_date,
+          buyer_company_name,
+          quantity_sold,
+          unit_price,
+          total_amount,
+          farmer_id
+        `)
+        .eq('status', 'approved')
+        .order('sale_date', { ascending: false });
+
+      if (salesError) throw salesError;
+
+      // Get farmer names separately
+      const farmerIds = [...new Set((salesReports || []).map(s => s.farmer_id))];
+      const { data: farmers } = await supabase
+        .from('farmers')
+        .select('farmer_id, full_name')
+        .in('farmer_id', farmerIds);
+
+      const farmerMap = new Map(farmers?.map(f => [f.farmer_id, f.full_name]) || []);
+
+      // Calculate totals
+      const totalKgSold = salesReports?.reduce(
+        (sum, s) => sum + (parseFloat(s.quantity_sold) || 0), 0
+      ) || 0;
+
+      const totalAmount = salesReports?.reduce(
+        (sum, s) => sum + (parseFloat(s.total_amount) || 0), 0
+      ) || 0;
+
+      // Calculate average price per kg
+      const averagePricePerKg = totalKgSold > 0 ? totalAmount / totalKgSold : 0;
+
+      // Count unique buyers
+      const uniqueBuyers = new Set(salesReports?.map(s => s.buyer_company_name) || []);
+      const numberOfBuyers = uniqueBuyers.size;
+
+      // Format recent sales (last 10)
+      const recentSales = (salesReports || []).slice(0, 10).map(sale => ({
+        sale_date: sale.sale_date,
+        farmer_name: farmerMap.get(sale.farmer_id) || 'Unknown',
+        buyer_company_name: sale.buyer_company_name,
+        quantity_sold: parseFloat(sale.quantity_sold),
+        unit_price: parseFloat(sale.unit_price),
+        total_amount: parseFloat(sale.total_amount)
+      }));
+
+      res.status(200).json({
+        totalKgSold: Math.round(totalKgSold * 100) / 100,
+        totalAmount: Math.round(totalAmount * 100) / 100,
+        averagePricePerKg: Math.round(averagePricePerKg * 100) / 100,
+        numberOfBuyers,
+        recentSales
+      });
+    } catch (error) {
+      console.error('Error fetching sales report:', error);
+      res.status(500).json({ error: 'Failed to fetch sales report' });
+    }
+  }
+
+  /**
+   * GET /api/admin/users-report
+   * Get user statistics and recent registrations
+   */
+  static async getUsersReport(req: Request, res: Response) {
+    try {
+      // 1. Count Farmers
+      const { count: farmersCount, error: farmersError } = await supabase
+        .from('farmers')
+        .select('*', { count: 'exact', head: true });
+
+      // 2. Count Association Officers
+      const { count: officersCount, error: officersError } = await supabase
+        .from('association_officers')
+        .select('*', { count: 'exact', head: true });
+
+      // 3. Count MAO/Admin
+      const { count: adminsCount, error: adminsError } = await supabase
+        .from('organization')
+        .select('*', { count: 'exact', head: true });
+
+      // 4. Get recent users (last 10 from all tables)
+      const { data: recentFarmers } = await supabase
+        .from('farmers')
+        .select('full_name, address, contact_number, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      const { data: recentOfficers } = await supabase
+        .from('association_officers')
+        .select('full_name, address, contact_number, created_at')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      const { data: recentAdmins } = await supabase
+        .from('organization')
+        .select('full_name, address, contact_number, created_at')
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      // Combine and format recent users
+      const recentUsers = [
+        ...(recentFarmers || []).map(u => ({ ...u, role: 'farmer' })),
+        ...(recentOfficers || []).map(u => ({ ...u, role: 'officer' })),
+        ...(recentAdmins || []).map(u => ({ ...u, role: 'admin' }))
+      ]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 10);
+
+      // Calculate total users
+      const totalUsers = (farmersCount || 0) + (officersCount || 0) + (adminsCount || 0);
+
+      res.status(200).json({
+        totalUsers,
+        totalFarmers: farmersCount || 0,
+        totalOfficers: officersCount || 0,
+        totalAdmins: adminsCount || 0,
+        recentUsers
+      });
+    } catch (error) {
+      console.error('Error fetching users report:', error);
+      res.status(500).json({ error: 'Failed to fetch users report' });
+    }
+  }
+}

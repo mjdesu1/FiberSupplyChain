@@ -1,0 +1,281 @@
+/**
+ * Monitoring Helper Functions
+ * Utility functions for monitoring operations
+ */
+
+import { MonitoringRecord, MonitoringStats, MonitoringFilters } from '../types/monitoring';
+
+/**
+ * Generate unique monitoring ID
+ */
+export const generateMonitoringId = (): string => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `MON-${timestamp}-${random}`;
+};
+
+/**
+ * Format date for display
+ */
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Format date for input field
+ */
+export const formatDateForInput = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
+/**
+ * Calculate days until next monitoring
+ */
+export const daysUntilMonitoring = (nextDate: string): number => {
+  const next = new Date(nextDate);
+  const today = new Date();
+  
+  // Normalize both dates to start of day for accurate comparison
+  next.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  const diffTime = next.getTime() - today.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+/**
+ * Check if monitoring is overdue
+ */
+export const isOverdue = (nextDate: string): boolean => {
+  const days = daysUntilMonitoring(nextDate);
+  return days < 0;
+};
+
+/**
+ * Check if monitoring is upcoming (within 30 days and not overdue)
+ */
+export const isUpcoming = (nextDate: string): boolean => {
+  const days = daysUntilMonitoring(nextDate);
+  return days >= 0 && days <= 30;
+};
+
+/**
+ * Get status badge color based on farm condition
+ */
+export const getConditionColor = (condition: string): string => {
+  switch (condition) {
+    case 'Healthy':
+      return 'bg-emerald-100 text-emerald-700 border-emerald-300';
+    case 'Needs Support':
+      return 'bg-amber-100 text-amber-700 border-amber-300';
+    case 'Damaged':
+      return 'bg-red-100 text-red-700 border-red-300';
+    default:
+      return 'bg-gray-100 text-gray-700 border-gray-300';
+  }
+};
+
+/**
+ * Get status badge color based on growth stage
+ */
+export const getGrowthStageColor = (stage: string): string => {
+  switch (stage) {
+    case 'Land Preparation':
+    case 'Planting':
+      return 'bg-blue-100 text-blue-700';
+    case 'Seedling':
+    case 'Vegetative':
+      return 'bg-green-100 text-green-700';
+    case 'Mature':
+    case 'Ready for Harvest':
+      return 'bg-purple-100 text-purple-700';
+    case 'Harvesting':
+    case 'Post-Harvest':
+      return 'bg-orange-100 text-orange-700';
+    default:
+      return 'bg-gray-100 text-gray-700';
+  }
+};
+
+/**
+ * Calculate monitoring statistics
+ */
+export const calculateStats = (records: MonitoringRecord[]): MonitoringStats => {
+  const stats: MonitoringStats = {
+    totalMonitoring: records.length,
+    healthyFarms: 0,
+    needsSupport: 0,
+    damagedFarms: 0,
+    upcomingMonitoring: 0,
+    overdueMonitoring: 0
+  };
+
+  records.forEach(record => {
+    // Count by condition
+    if (record.farmCondition === 'Healthy') stats.healthyFarms++;
+    if (record.farmCondition === 'Needs Support') stats.needsSupport++;
+    if (record.farmCondition === 'Damaged') stats.damagedFarms++;
+
+    // Count upcoming and overdue
+    if (isUpcoming(record.nextMonitoringDate)) stats.upcomingMonitoring++;
+    if (isOverdue(record.nextMonitoringDate)) stats.overdueMonitoring++;
+  });
+
+  return stats;
+};
+
+/**
+ * Filter monitoring records
+ */
+export const filterRecords = (
+  records: MonitoringRecord[],
+  filters: MonitoringFilters
+): MonitoringRecord[] => {
+  return records.filter(record => {
+    // Date range filter
+    if (filters.dateFrom && record.dateOfVisit < filters.dateFrom) return false;
+    if (filters.dateTo && record.dateOfVisit > filters.dateTo) return false;
+
+    // Farmer filter
+    if (filters.farmerId && record.farmerId !== filters.farmerId) return false;
+
+    // Condition filter
+    if (filters.farmCondition && record.farmCondition !== filters.farmCondition) return false;
+
+    // Growth stage filter
+    if (filters.growthStage && record.growthStage !== filters.growthStage) return false;
+
+    // Monitored by filter
+    if (filters.monitoredBy && record.monitoredBy !== filters.monitoredBy) return false;
+
+    return true;
+  });
+};
+
+/**
+ * Sort records by date (newest first)
+ */
+export const sortByDate = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  return [...records].sort((a, b) => 
+    new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
+  );
+};
+
+/**
+ * Get upcoming monitoring records
+ */
+export const getUpcomingMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  return records
+    .filter(record => isUpcoming(record.nextMonitoringDate))
+    .sort((a, b) => 
+      new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
+    );
+};
+
+/**
+ * Get overdue monitoring records
+ */
+export const getOverdueMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  return records
+    .filter(record => isOverdue(record.nextMonitoringDate))
+    .sort((a, b) => 
+      new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
+    );
+};
+
+/**
+ * Validate monitoring form data
+ */
+export const validateMonitoringForm = (data: any): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  if (!data.dateOfVisit) errors.push('Date of visit is required');
+  if (!data.monitoredBy) errors.push('Monitored by is required');
+  if (!data.farmerName) errors.push('Farmer name is required');
+  if (!data.farmCondition) errors.push('Farm condition is required');
+  if (!data.growthStage) errors.push('Growth stage is required');
+  if (!data.actionsTaken || data.actionsTaken.trim() === '') {
+    errors.push('Actions taken is required');
+  }
+  if (!data.recommendations || data.recommendations.trim() === '') {
+    errors.push('Recommendations is required');
+  }
+  if (!data.nextMonitoringDate) errors.push('Next monitoring date is required');
+
+  // Validate date logic
+  if (data.dateOfVisit && data.nextMonitoringDate) {
+    const visitDate = new Date(data.dateOfVisit);
+    const nextDate = new Date(data.nextMonitoringDate);
+    if (nextDate <= visitDate) {
+      errors.push('Next monitoring date must be after the visit date');
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+};
+
+/**
+ * Export monitoring records to CSV
+ */
+export const exportToCSV = (records: MonitoringRecord[]): string => {
+  const headers = [
+    'Monitoring ID',
+    'Date of Visit',
+    'Monitored By',
+    'Farmer Name',
+    'Association',
+    'Farm Condition',
+    'Growth Stage',
+    'Issues Observed',
+    'Actions Taken',
+    'Recommendations',
+    'Next Monitoring Date'
+  ];
+
+  const rows = records.map(record => [
+    record.monitoringId,
+    formatDate(record.dateOfVisit),
+    record.monitoredBy,
+    record.farmerName,
+    record.associationName || 'N/A',
+    record.farmCondition,
+    record.growthStage,
+    record.issuesObserved.join('; '),
+    record.actionsTaken,
+    record.recommendations,
+    formatDate(record.nextMonitoringDate)
+  ]);
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n');
+
+  return csvContent;
+};
+
+/**
+ * Download CSV file
+ */
+export const downloadCSV = (records: MonitoringRecord[], filename: string = 'monitoring-records.csv'): void => {
+  const csv = exportToCSV(records);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};

@@ -1,0 +1,39 @@
+{
+  "name": "mao-culiram-abaca-backend",
+  "version": "1.0.0",
+  "description": "Backend for MAO Culiram Abaca System",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "migrate": "node scripts/run-migration.js",
+    "test-db": "node scripts/test-db-connection.js",
+    "create-seedling-tables": "node scripts/create-seedling-tables.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
+    "@types/multer": "^2.0.0",
+    "@types/pg": "^8.15.6",
+    "axios": "^1.13.1",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.15",
+    "@types/express": "^4.17.19",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.8.10",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}

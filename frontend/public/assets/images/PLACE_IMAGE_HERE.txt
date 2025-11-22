@@ -1,0 +1,54 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║          📸 PLACE YOUR BURLAP IMAGE HERE 📸                  ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+STEP 1: Rename Your Image
+---------------------------
+Rename: close-up-burlap-fabric-material-texture.jpg
+To:     abaca-header.jpg
+
+
+STEP 2: Place It Here
+---------------------------
+Copy the renamed file to this folder:
+→ frontend/public/assets/images/abaca-header.jpg
+
+
+STEP 3: Refresh Your Browser
+---------------------------
+The burlap texture will automatically appear as the hero background!
+
+
+✨ WHAT YOU'LL SEE:
+---------------------------
+• Beautiful burlap texture covering the entire hero section
+• Dark emerald/teal gradient overlay
+• White text on top with perfect contrast
+• Parallax scrolling effect (background moves slower)
+• Professional, modern look
+
+
+🎨 CURRENT DESIGN:
+---------------------------
+• Full-screen hero section
+• Split layout (text left, stats right)
+• Animated scroll indicator
+• Glassmorphism stat cards
+• Smooth scroll animations
+
+
+📝 NEED HELP?
+---------------------------
+If the image doesn't appear:
+1. Check the file name is exactly: abaca-header.jpg
+2. Check it's in: frontend/public/assets/images/
+3. Refresh your browser (Ctrl + F5)
+4. Check browser console for errors
+
+
+🚀 READY TO GO!
+---------------------------
+Once you place the image, your homepage will have a
+stunning, professional look with your burlap texture!

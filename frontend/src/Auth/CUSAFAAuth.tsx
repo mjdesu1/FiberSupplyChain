@@ -1,0 +1,629 @@
+import React, { useState } from 'react';
+import { Eye, EyeOff, ArrowLeft, ChevronRight, ChevronLeft, X, Camera, FileText, Building2 } from 'lucide-react';
+import { completeLogin } from '../utils/authToken';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+
+interface CUSAFAAuthProps {
+  onBack: () => void;
+  onLoginSuccess: () => void;
+}
+
+export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }) => {
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [isLogin, setIsLogin] = useState(true);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState<any>({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    position: '',
+    associationName: '',
+    contactNumber: '',
+    address: '',
+    termDuration: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>('');
+  const [validIdPreview, setValidIdPreview] = useState<string>('');
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'id') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size must be less than 5MB');
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload an image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        if (type === 'profile') {
+          setFormData({ ...formData, profilePhoto: base64 });
+          setProfilePhotoPreview(base64);
+        } else {
+          setFormData({ ...formData, validIdPhoto: base64 });
+          setValidIdPreview(base64);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = (type: 'profile' | 'id') => {
+    if (type === 'profile') {
+      setFormData({ ...formData, profilePhoto: '' });
+      setProfilePhotoPreview('');
+    } else {
+      setFormData({ ...formData, validIdPhoto: '' });
+      setValidIdPreview('');
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!executeRecaptcha) {
+        setError('reCAPTCHA not loaded');
+        setLoading(false);
+        return;
+      }
+
+      // Get reCAPTCHA v3 token (invisible)
+      const recaptchaToken = await executeRecaptcha('login');
+
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          userType: 'association_officer',
+          recaptchaToken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Debug logging to help identify the issue
+      console.log('Login response data:', data);
+      console.log('User isVerified:', data.data.user.isVerified);
+      console.log('User verificationStatus:', data.data.user.verificationStatus);
+      
+      // Check if the account is verified (enhanced check for both fields)
+      const isVerified = data.data.user.isVerified === true;
+      const verificationStatus = data.data.user.verificationStatus || 'pending';
+      
+      console.log('Enhanced check - isVerified:', isVerified);
+      console.log('Enhanced check - verificationStatus:', verificationStatus);
+      console.log('Condition result (!isVerified || verificationStatus !== \'verified\'):', !isVerified || verificationStatus !== 'verified');
+      
+      if (!isVerified || verificationStatus !== 'verified') {
+        if (verificationStatus === 'rejected') {
+          setError('Your account has been rejected. Reason: ' + (data.data.user.rejectionReason || 'Not specified'));
+        } else {
+          setError('Your account is pending verification. Please wait for admin approval before logging in.');
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Use centralized token management
+      completeLogin(
+        data.data.tokens.accessToken,
+        data.data.tokens.refreshToken,
+        data.data.user,
+        'association_officer'
+      );
+
+      alert('Login successful!');
+      onLoginSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (!executeRecaptcha) {
+        setError('reCAPTCHA not loaded');
+        setLoading(false);
+        return;
+      }
+
+      const recaptchaToken = await executeRecaptcha('register');
+      const { confirmPassword, ...submitData } = formData;
+
+      const response = await fetch('http://localhost:3001/api/auth/register/officer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...submitData, 
+          recaptchaToken,
+          associationName: submitData.associationName || 'CUSAFA' // Ensure association name is set
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.error || data.message || 'Registration failed';
+        const errorDetails = data.details ? `\nDetails: ${JSON.stringify(data.details)}` : '';
+        throw new Error(`${errorMessage}${errorDetails}`);
+      }
+
+      // Show success message with verification instructions
+      alert(
+        'Registration successful!\n\n' +
+        'Your account has been created and is pending verification by an administrator.\n' +
+        'You will be able to login once your account is approved.\n\n' +
+        'Please check back later or contact the administrator for updates.'
+      );
+
+      // Switch to login view
+      setIsLogin(true);
+      setCurrentStep(1);
+      setFormData({
+        email: formData.email, // Keep email for convenience
+        password: '',
+        confirmPassword: '',
+        fullName: '',
+        position: '',
+        associationName: '',
+        contactNumber: '',
+        address: '',
+        termDuration: '',
+      });
+      setProfilePhotoPreview('');
+      setValidIdPreview('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nextStep = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+      setError('');
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      setError('');
+    }
+  };
+
+  const canProceedToStep2 = () => {
+    return formData.fullName && formData.email && formData.password && formData.confirmPassword;
+  };
+
+  const canProceedToStep3 = () => {
+    return formData.position && formData.associationName && formData.contactNumber;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <button
+          onClick={onBack}
+          className="mb-6 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to home
+        </button>
+
+        <div className="bg-white rounded-xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
+              {isLogin ? 'CUSAFA Login' : 'CUSAFA Registration'}
+            </h2>
+            <p className="text-gray-600 text-sm">
+              {isLogin ? 'For CUSAFA organization officers' : 'Register as CUSAFA officer'}
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+              {error}
+            </div>
+          )}
+
+          {isLogin ? (
+            // LOGIN FORM
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="your.email@cusafa.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </button>
+
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(false);
+                    setError('');
+                  }}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  Don't have an account? Register here
+                </button>
+              </div>
+            </form>
+          ) : (
+            // REGISTRATION FORM
+            <form onSubmit={handleRegister} className="space-y-4">
+              {/* Progress Indicator */}
+              <div className="flex items-center justify-between mb-6">
+                {[1, 2, 3].map((step) => (
+                  <div key={step} className="flex items-center">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        currentStep >= step
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {step}
+                    </div>
+                    {step < 3 && (
+                      <div
+                        className={`w-16 h-1 mx-2 ${
+                          currentStep > step ? 'bg-blue-600' : 'bg-gray-200'
+                        }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Step 1: Basic Information */}
+              {currentStep === 1 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800 mb-4">Basic Information</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Juan Dela Cruz"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="your.email@cusafa.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
+                    <input
+                      type="password"
+                      required
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="••••••••"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={!canProceedToStep2()}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    Next <ChevronRight className="w-5 h-5 ml-2" />
+                  </button>
+                </div>
+              )}
+
+              {/* Step 2: Officer Details */}
+              {currentStep === 2 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800 mb-4">Officer Details</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Position *</label>
+                    <select
+                      required
+                      value={formData.position}
+                      onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select Position</option>
+                      <option value="President">President</option>
+                      <option value="Vice President">Vice President</option>
+                      <option value="Treasurer">Treasurer</option>
+                      <option value="Secretary">Secretary</option>
+                      <option value="Auditor">Auditor</option>
+                      <option value="Board Member">Board Member</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Organization Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.associationName}
+                      onChange={(e) => setFormData({ ...formData, associationName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="CUSAFA"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Contact Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.contactNumber}
+                      onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="09123456789"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <textarea
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Complete address"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Term Duration</label>
+                    <input
+                      type="text"
+                      value={formData.termDuration}
+                      onChange={(e) => setFormData({ ...formData, termDuration: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 2024-2026"
+                    />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={prevStep}
+                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-lg transition-colors flex items-center justify-center"
+                    >
+                      <ChevronLeft className="w-5 h-5 mr-2" /> Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={nextStep}
+                      disabled={!canProceedToStep3()}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      Next <ChevronRight className="w-5 h-5 ml-2" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Document Upload */}
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800 mb-4">Document Upload</h3>
+                  
+                  {/* Profile Photo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Profile Photo (Optional)
+                    </label>
+                    {profilePhotoPreview ? (
+                      <div className="relative">
+                        <img
+                          src={profilePhotoPreview}
+                          alt="Profile preview"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removePhoto('profile')}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <Camera className="w-8 h-8 text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-500">Click to upload photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePhotoUpload(e, 'profile')}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Valid ID Photo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Valid ID Photo (Optional)
+                    </label>
+                    {validIdPreview ? (
+                      <div className="relative">
+                        <img
+                          src={validIdPreview}
+                          alt="ID preview"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removePhoto('id')}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <FileText className="w-8 h-8 text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-500">Click to upload ID</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePhotoUpload(e, 'id')}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                    <p className="font-medium mb-1">⚠️ Verification Required</p>
+                    <p>Your account will be pending verification after registration. An administrator will review and approve your account before you can login.</p>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={prevStep}
+                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-lg transition-colors flex items-center justify-center"
+                    >
+                      <ChevronLeft className="w-5 h-5 mr-2" /> Back
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {loading ? 'Registering...' : 'Register'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(true);
+                    setCurrentStep(1);
+                    setError('');
+                  }}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  Already have an account? Login here
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

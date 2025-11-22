@@ -1,0 +1,737 @@
+import React, { useState } from 'react';
+import { User, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, ArrowLeft } from 'lucide-react';
+import { completeLogin } from '../utils/authToken';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+
+interface FarmerAuthProps {
+  onBack: () => void;
+  onLoginSuccess: () => void;
+}
+
+export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }) => {
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [isLogin, setIsLogin] = useState(true);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<any>({
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>('');
+  const [validIdPreview, setValidIdPreview] = useState<string>('');
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'id') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size must be less than 5MB');
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload an image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        if (type === 'profile') {
+          setFormData({ ...formData, profilePhoto: base64 });
+          setProfilePhotoPreview(base64);
+        } else {
+          setFormData({ ...formData, validIdPhoto: base64 });
+          setValidIdPreview(base64);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = (type: 'profile' | 'id') => {
+    if (type === 'profile') {
+      setFormData({ ...formData, profilePhoto: '' });
+      setProfilePhotoPreview('');
+    } else {
+      setFormData({ ...formData, validIdPhoto: '' });
+      setValidIdPreview('');
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!executeRecaptcha) {
+        setError('reCAPTCHA not loaded');
+        setLoading(false);
+        return;
+      }
+
+      const recaptchaToken = await executeRecaptcha('login');
+
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          userType: 'farmer',
+          recaptchaToken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Debug logging to help identify the issue
+      console.log('Login response data:', data);
+      console.log('User isVerified:', data.data.user.isVerified);
+      console.log('User verificationStatus:', data.data.user.verificationStatus);
+      
+      // Check if the account is verified (enhanced check for both fields)
+      const isVerified = data.data.user.isVerified === true;
+      const verificationStatus = data.data.user.verificationStatus || 'pending';
+      
+      console.log('Enhanced check - isVerified:', isVerified);
+      console.log('Enhanced check - verificationStatus:', verificationStatus);
+      console.log('Condition result (!isVerified || verificationStatus !== \'verified\'):', !isVerified || verificationStatus !== 'verified');
+      
+      if (!isVerified || verificationStatus !== 'verified') {
+        if (verificationStatus === 'rejected') {
+          setError('Your account has been rejected. Reason: ' + (data.data.user.rejectionReason || 'Not specified'));
+        } else {
+          setError('Your account is pending verification. Please wait for admin approval before logging in.');
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Use centralized token management
+      completeLogin(
+        data.data.tokens.accessToken,
+        data.data.tokens.refreshToken,
+        data.data.user,
+        'farmer'
+      );
+
+      alert('Login successful!');
+      onLoginSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (!executeRecaptcha) {
+        setError('reCAPTCHA not loaded');
+        setLoading(false);
+        return;
+      }
+
+      const recaptchaToken = await executeRecaptcha('register');
+      const { confirmPassword, ...submitData } = formData;
+
+      const response = await fetch('http://localhost:3001/api/auth/register/farmer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...submitData, recaptchaToken }),
+      });
+
+      const data = await response.json();
+      console.log('Registration response:', data);
+
+      if (!response.ok) {
+        const errorMessage = data.error || data.message || 'Registration failed';
+        const errorDetails = data.details ? `\nDetails: ${JSON.stringify(data.details)}` : '';
+        throw new Error(`${errorMessage}${errorDetails}`);
+      }
+
+      // Show success message with verification instructions
+      alert(
+        '✅ Registration Successful!\n\n' +
+        '📋 Your application is now pending verification.\n\n' +
+        '⏱️ What happens next?\n' +
+        '• Our team will review your application and documents\n' +
+        '• Verification usually takes 1-3 business days\n' +
+        '• We will contact you via email or phone once verified\n\n' +
+        '📞 For urgent concerns:\n' +
+        'Email: support@mao.gov.ph\n' +
+        'Phone: (085) 123-4567\n\n' +
+        'Thank you for your patience!'
+      );
+      
+      setIsLogin(true);
+      setCurrentStep(1);
+      setFormData({ email: formData.email, password: '', confirmPassword: '' });
+      setProfilePhotoPreview('');
+      setValidIdPreview('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
+  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <button
+          onClick={onBack}
+          className="mb-6 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to home
+        </button>
+
+        <div className="bg-white rounded-xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-teal-100 flex items-center justify-center">
+              <User className="w-8 h-8 text-teal-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
+              {isLogin ? 'Farmer Login' : 'Farmer Registration'}
+            </h2>
+            <p className="text-gray-600 text-sm">For abaca farmers</p>
+          </div>
+
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => {
+                setIsLogin(true);
+                setCurrentStep(1);
+              }}
+              className={`flex-1 py-2 rounded-md transition-colors ${
+                isLogin ? 'bg-white shadow text-gray-800 font-medium' : 'text-gray-600'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => {
+                setIsLogin(false);
+                setCurrentStep(1);
+              }}
+              className={`flex-1 py-2 rounded-md transition-colors ${
+                !isLogin ? 'bg-white shadow text-gray-800 font-medium' : 'text-gray-600'
+              }`}
+            >
+              Register
+            </button>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+              {error}
+            </div>
+          )}
+
+          {isLogin ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="your.email@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister}>
+              {/* Progress Indicator */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
+                      currentStep >= 1 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      1
+                    </div>
+                    <span className={`text-xs font-medium text-center ${
+                      currentStep >= 1 ? 'text-teal-700' : 'text-gray-500'
+                    }`}>Personal Info</span>
+                  </div>
+                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${
+                    currentStep > 1 ? 'bg-teal-600' : 'bg-gray-200'
+                  }`}></div>
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
+                      currentStep >= 2 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      2
+                    </div>
+                    <span className={`text-xs font-medium text-center ${
+                      currentStep >= 2 ? 'text-teal-700' : 'text-gray-500'
+                    }`}>Farm Details</span>
+                  </div>
+                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${
+                    currentStep > 2 ? 'bg-teal-600' : 'bg-gray-200'
+                  }`}></div>
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
+                      currentStep >= 3 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      3
+                    </div>
+                    <span className={`text-xs font-medium text-center ${
+                      currentStep >= 3 ? 'text-teal-700' : 'text-gray-500'
+                    }`}>Account Setup</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 1: Personal Information */}
+              {currentStep === 1 && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.fullName || ''}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      placeholder="Juan Dela Cruz"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
+                      <select
+                        value={formData.sex || ''}
+                        onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      >
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                      <input
+                        type="number"
+                        min="18"
+                        value={formData.age || ''}
+                        onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="45"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                      <input
+                        type="tel"
+                        value={formData.contactNumber || ''}
+                        onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="09171234567"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <input
+                        type="text"
+                        value={formData.address || ''}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Purok 1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Barangay</label>
+                      <input
+                        type="text"
+                        value={formData.barangay || ''}
+                        onChange={(e) => setFormData({ ...formData, barangay: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Culiram"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Municipality</label>
+                      <input
+                        type="text"
+                        value={formData.municipality || ''}
+                        onChange={(e) => setFormData({ ...formData, municipality: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Prosperidad"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+                    <input
+                      type="text"
+                      value={formData.associationName || ''}
+                      onChange={(e) => setFormData({ ...formData, associationName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      placeholder="CuSAFA"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Farm Information */}
+              {currentStep === 2 && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Farm Location</label>
+                      <input
+                        type="text"
+                        value={formData.farmLocation || ''}
+                        onChange={(e) => setFormData({ ...formData, farmLocation: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Sitio Riverside"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Coordinates</label>
+                      <input
+                        type="text"
+                        value={formData.farmCoordinates || ''}
+                        onChange={(e) => setFormData({ ...formData, farmCoordinates: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="8.5167,126.0833"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Area (ha)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.farmAreaHectares || ''}
+                        onChange={(e) => setFormData({ ...formData, farmAreaHectares: parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="2.5"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Years Farming</label>
+                      <input
+                        type="number"
+                        value={formData.yearsInFarming || ''}
+                        onChange={(e) => setFormData({ ...formData, yearsInFarming: parseInt(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="15"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Abaca Type</label>
+                      <input
+                        type="text"
+                        value={formData.typeOfAbacaPlanted || ''}
+                        onChange={(e) => setFormData({ ...formData, typeOfAbacaPlanted: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Musa Textilis"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Harvest (kg/cycle)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.averageHarvestVolumeKg || ''}
+                        onChange={(e) => setFormData({ ...formData, averageHarvestVolumeKg: parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Frequency (weeks)</label>
+                      <input
+                        type="number"
+                        value={formData.harvestFrequencyWeeks || ''}
+                        onChange={(e) => setFormData({ ...formData, harvestFrequencyWeeks: parseInt(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="12"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Price (₱/kg)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.sellingPriceRangeMin || ''}
+                        onChange={(e) => setFormData({ ...formData, sellingPriceRangeMin: parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="25.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Price (₱/kg)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.sellingPriceRangeMax || ''}
+                        onChange={(e) => setFormData({ ...formData, sellingPriceRangeMax: parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="30.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Income (₱/cycle)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.incomePerCycle || ''}
+                        onChange={(e) => setFormData({ ...formData, incomePerCycle: parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="15000"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Regular Buyer</label>
+                    <input
+                      type="text"
+                      value={formData.regularBuyer || ''}
+                      onChange={(e) => setFormData({ ...formData, regularBuyer: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      placeholder="Noy-Noy Abaca Trading"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Account Information */}
+              {currentStep === 3 && (
+                <div className="space-y-3">
+                  {/* Photo Upload Section */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-2 mb-3">
+                      <Camera className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-blue-900 text-sm">Verification Documents Required</h4>
+                        <p className="text-xs text-blue-700">Upload your photo and valid ID for account verification</p>
+                      </div>
+                    </div>
+
+                    {/* Profile Photo Upload */}
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Profile Photo * <span className="text-xs text-gray-500">(Max 5MB)</span>
+                      </label>
+                      {!profilePhotoPreview ? (
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                          <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-600">Click to upload profile photo</span>
+                          <span className="text-xs text-gray-500">JPG, PNG (Max 5MB)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handlePhotoUpload(e, 'profile')}
+                            className="hidden"
+                            required
+                          />
+                        </label>
+                      ) : (
+                        <div className="relative">
+                          <img
+                            src={profilePhotoPreview}
+                            alt="Profile Preview"
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto('profile')}
+                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Valid ID Upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Valid ID * <span className="text-xs text-gray-500">(Driver's License, National ID, etc.)</span>
+                      </label>
+                      {!validIdPreview ? (
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                          <FileText className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-600">Click to upload valid ID</span>
+                          <span className="text-xs text-gray-500">JPG, PNG (Max 5MB)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handlePhotoUpload(e, 'id')}
+                            className="hidden"
+                            required
+                          />
+                        </label>
+                      ) : (
+                        <div className="relative">
+                          <img
+                            src={validIdPreview}
+                            alt="ID Preview"
+                            className="w-full h-48 object-contain rounded-lg bg-gray-100"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto('id')}
+                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                      <input
+                        type="password"
+                        required
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Min. 8 characters"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
+                      <input
+                        type="password"
+                        required
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Re-enter password"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">Must contain uppercase, lowercase, number, and special character</p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Remarks / Notes</label>
+                    <textarea
+                      rows={3}
+                      value={formData.remarks || ''}
+                      onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                      placeholder="Additional notes..."
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-6 pt-4 border-t">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="px-5 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium flex items-center gap-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+                )}
+
+                {currentStep < 3 ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className="ml-auto px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium flex items-center gap-2"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="ml-auto px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium disabled:opacity-50"
+                  >
+                    {loading ? 'Registering...' : 'Complete Registration'}
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
