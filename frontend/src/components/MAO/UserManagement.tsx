@@ -49,6 +49,8 @@ const UserManagement: React.FC = () => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [editFormData, setEditFormData] = useState<any>({});
   const [rejectionReason, setRejectionReason] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Fetch users
   useEffect(() => {
@@ -75,6 +77,7 @@ const UserManagement: React.FC = () => {
     }
 
     setFilteredUsers(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [users, searchTerm, statusFilter]);
 
   const fetchUsers = async () => {
@@ -552,48 +555,51 @@ const UserManagement: React.FC = () => {
             <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      Name
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Contact
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4" />
-                      {activeTab === 'farmers' ? 'Organization' : activeTab === 'buyers' ? 'Business' : 'Organization'}
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Status
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Registered
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Name
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        Contact
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4" />
+                        {activeTab === 'farmers' ? 'Organization' : activeTab === 'buyers' ? 'Business' : 'Organization'}
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Status
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Registered
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {filteredUsers
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((user) => (
+                    <tr key={user.id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div>
@@ -686,12 +692,72 @@ const UserManagement: React.FC = () => {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Items per page */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                  <div className="flex gap-2">
+                    {[10, 20, 40].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          setItemsPerPage(size);
+                          setCurrentPage(1);
+                        }}
+                        className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                          itemsPerPage === size
+                            ? 'bg-emerald-500 text-white shadow-lg'
+                            : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Page info and navigation */}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-600">
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredUsers.length / itemsPerPage), prev + 1))}
+                      disabled={currentPage >= Math.ceil(filteredUsers.length / itemsPerPage)}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        currentPage >= Math.ceil(filteredUsers.length / itemsPerPage)
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

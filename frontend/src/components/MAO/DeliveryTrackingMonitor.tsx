@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Truck, Package, CheckCircle, XCircle, AlertCircle, Calendar, MapPin, User,
-  Phone, DollarSign, Filter, Download, Search, Eye, TrendingUp, Clock, Award, Leaf
+  Phone, DollarSign, Filter, Download, Search, Eye, Clock, Award, Leaf
 } from 'lucide-react';
 
 interface Delivery {
@@ -68,7 +68,6 @@ const DeliveryTrackingMonitor: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     const icons: { [key: string]: JSX.Element } = {
-      'Confirmed': <CheckCircle className="text-blue-500" size={20} />,
       'In Transit': <Truck className="text-purple-500" size={20} />,
       'Delivered': <Package className="text-green-500" size={20} />,
       'Completed': <CheckCircle className="text-emerald-500" size={20} />,
@@ -79,7 +78,6 @@ const DeliveryTrackingMonitor: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
-      'Confirmed': 'bg-blue-100 text-blue-800 border-blue-300',
       'In Transit': 'bg-purple-100 text-purple-800 border-purple-300',
       'Delivered': 'bg-green-100 text-green-800 border-green-300',
       'Completed': 'bg-emerald-100 text-emerald-800 border-emerald-300',
@@ -99,7 +97,7 @@ const DeliveryTrackingMonitor: React.FC = () => {
 
   const getStatusProgress = (status: string) => {
     const progress: { [key: string]: number } = {
-      'Confirmed': 25, 'In Transit': 50, 'Delivered': 75, 'Completed': 100, 'Cancelled': 0
+      'In Transit': 33, 'Delivered': 66, 'Completed': 100, 'Cancelled': 0
     };
     return progress[status] || 0;
   };
@@ -121,9 +119,66 @@ const DeliveryTrackingMonitor: React.FC = () => {
     in_transit: deliveries.filter(d => d.status === 'In Transit').length,
     delivered: deliveries.filter(d => d.status === 'Delivered').length,
     completed: deliveries.filter(d => d.status === 'Completed').length,
+    cancelled: deliveries.filter(d => d.status === 'Cancelled').length,
     total_fiber_kg: deliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0),
     total_value: deliveries.filter(d => d.status === 'Completed').reduce((sum, d) => sum + parseFloat(d.total_amount.toString()), 0)
   };
+
+  // Calculate monthly fiber delivered
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  const monthlyFiberData = Array.from({ length: 12 }, (_, i) => {
+    const monthDeliveries = deliveries.filter(d => {
+      const deliveryDate = new Date(d.delivery_date);
+      return deliveryDate.getMonth() === i && deliveryDate.getFullYear() === currentYear;
+    });
+    return monthDeliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0);
+  });
+
+  const thisMonthFiber = monthlyFiberData[currentMonth];
+  
+  // Calculate yearly fiber delivered
+  const yearlyFiberData = Array.from({ length: 5 }, (_, i) => {
+    const year = currentYear - 4 + i;
+    const yearDeliveries = deliveries.filter(d => {
+      const deliveryDate = new Date(d.delivery_date);
+      return deliveryDate.getFullYear() === year;
+    });
+    return {
+      year,
+      fiber: yearDeliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0)
+    };
+  });
+
+  const thisYearFiber = yearlyFiberData.find(y => y.year === currentYear)?.fiber || 0;
+
+  // Pie chart data (excluding pending, only active statuses)
+  const pieChartData = [
+    { label: 'In Transit', value: stats.in_transit, color: '#a855f7' },
+    { label: 'Delivered', value: stats.delivered, color: '#22c55e' },
+    { label: 'Completed', value: stats.completed, color: '#10b981' },
+    { label: 'Cancelled', value: stats.cancelled, color: '#ef4444' }
+  ].filter(item => item.value > 0);
+
+  const totalForPie = pieChartData.reduce((sum, item) => sum + item.value, 0);
+  
+  // Calculate pie chart segments
+  let currentAngle = -90; // Start from top
+  const pieSegments = pieChartData.map(item => {
+    const percentage = (item.value / totalForPie) * 100;
+    const angle = (percentage / 100) * 360;
+    const segment = {
+      ...item,
+      percentage,
+      startAngle: currentAngle,
+      endAngle: currentAngle + angle
+    };
+    currentAngle += angle;
+    return segment;
+  });
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const downloadCSV = () => {
     const headers = ['Delivery ID', 'Farmer', 'Buyer', 'Variety', 'Quantity (kg)', 'Grade', 'Status', 'Delivery Date', 'Location', 'Payment Status'];
@@ -158,54 +213,54 @@ const DeliveryTrackingMonitor: React.FC = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">🚚 Fiber Delivery Tracking Monitor</h1>
-        <p className="text-gray-600">Real-time monitoring of all fiber deliveries from farmers to buyers</p>
-      </div>
-
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500">
-          <div className="flex items-center gap-2 mb-2">
-            <Package className="text-blue-500" size={20} />
-            <p className="text-sm text-gray-600">Total Deliveries</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* Total Deliveries Card */}
+        <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Truck className="text-white" size={24} />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          <p className="text-white/90 text-sm font-medium mb-1">Total Deliveries</p>
+          <p className="text-4xl font-bold text-white mb-2">{stats.total}</p>
+          <p className="text-white/70 text-xs">All time deliveries</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-purple-500">
-          <div className="flex items-center gap-2 mb-2">
-            <Truck className="text-purple-500" size={20} />
-            <p className="text-sm text-gray-600">In Transit</p>
+
+        {/* In Transit Card */}
+        <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Package className="text-white" size={24} />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.in_transit}</p>
+          <p className="text-white/90 text-sm font-medium mb-1">In Transit</p>
+          <p className="text-4xl font-bold text-white mb-2">{stats.in_transit}</p>
+          <p className="text-white/70 text-xs">Currently shipping</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="text-green-500" size={20} />
-            <p className="text-sm text-gray-600">Delivered</p>
+
+        {/* Delivered Card */}
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <CheckCircle className="text-white" size={24} />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.delivered}</p>
+          <p className="text-white/90 text-sm font-medium mb-1">Delivered</p>
+          <p className="text-4xl font-bold text-white mb-2">{stats.delivered}</p>
+          <p className="text-white/70 text-xs">Successfully delivered</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-emerald-500">
-          <div className="flex items-center gap-2 mb-2">
-            <Award className="text-emerald-500" size={20} />
-            <p className="text-sm text-gray-600">Completed</p>
+
+        {/* Total Fiber Card */}
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Leaf className="text-white" size={24} />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-amber-500">
-          <div className="flex items-center gap-2 mb-2">
-            <Leaf className="text-amber-500" size={20} />
-            <p className="text-sm text-gray-600">Total Fiber (kg)</p>
-          </div>
-          <p className="text-2xl font-bold text-amber-600">{stats.total_fiber_kg.toFixed(2)}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-indigo-500">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="text-indigo-500" size={20} />
-            <p className="text-sm text-gray-600">Total Value</p>
-          </div>
-          <p className="text-2xl font-bold text-indigo-600">₱{stats.total_value.toLocaleString()}</p>
+          <p className="text-white/90 text-sm font-medium mb-1">Total Fiber</p>
+          <p className="text-4xl font-bold text-white mb-2">{stats.total_fiber_kg.toFixed(1)}</p>
+          <p className="text-white/70 text-xs">Kilograms delivered</p>
         </div>
       </div>
 

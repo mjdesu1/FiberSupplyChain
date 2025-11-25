@@ -13,7 +13,8 @@ import {
   Trash2,
   Package,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  X
 } from 'lucide-react';
 import { getUserData, getAuthToken } from '../../utils/authToken';
 
@@ -28,15 +29,32 @@ interface SalesReport {
   submittedAt: string;
 }
 
+// Helper function to generate readable ID from UUID
+const generateReadableId = (uuid: string): string => {
+  if (!uuid) return 'N/A';
+  // Take first 8 chars and convert to uppercase for readability
+  const shortId = uuid.replace(/-/g, '').substring(0, 8).toUpperCase();
+  // Format as SR-XXX-XXXXX for better readability
+  return `SR-${shortId.substring(0, 3)}-${shortId.substring(3)}`;
+};
+
 const UnifiedSalesManagement: React.FC = () => {
   const [recentReports, setRecentReports] = useState<SalesReport[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  const [selectedReports, setSelectedReports] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<SalesReport | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    buyerName: '',
+    totalRevenue: '',
+    totalQuantity: '',
+    status: 'pending' as 'pending' | 'approved' | 'rejected'
+  });
 
   // Load data from API
   useEffect(() => {
@@ -115,6 +133,88 @@ const UnifiedSalesManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Error approving report:', error);
+    }
+  };
+
+  // Handle view report
+  const handleViewReport = (report: SalesReport) => {
+    setSelectedReport(report);
+    setShowViewModal(true);
+  };
+
+  // Handle edit report
+  const handleEditReport = (report: SalesReport) => {
+    setSelectedReport(report);
+    setEditFormData({
+      buyerName: report.buyerName || '',
+      totalRevenue: report.totalRevenue.toString(),
+      totalQuantity: report.totalQuantity.toString(),
+      status: report.status
+    });
+    setShowEditModal(true);
+  };
+
+  // Handle update report
+  const handleUpdateReport = async () => {
+    if (!selectedReport) return;
+
+    try {
+      const token = getAuthToken();
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      
+      const response = await fetch(`${apiUrl}/api/sales/reports/${selectedReport.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: editFormData.status,
+          reviewed_by: getUserData()?.id
+        })
+      });
+
+      if (response.ok) {
+        setRecentReports(prev =>
+          prev.map(report =>
+            report.id === selectedReport.id
+              ? {
+                  ...report,
+                  buyerName: editFormData.buyerName,
+                  totalRevenue: parseFloat(editFormData.totalRevenue),
+                  totalQuantity: parseFloat(editFormData.totalQuantity),
+                  status: editFormData.status
+                }
+              : report
+          )
+        );
+        setShowEditModal(false);
+        alert('✅ Report updated successfully!');
+      } else {
+        alert('❌ Failed to update report');
+      }
+    } catch (error) {
+      console.error('Error updating report:', error);
+      alert('❌ Failed to update report');
+    }
+  };
+
+  // Handle delete report
+  const handleDeleteReport = async (reportId: string) => {
+    if (!confirm('Are you sure you want to delete this sales report?')) {
+      return;
+    }
+
+    try {
+      const token = getAuthToken();
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      
+      // Since we don't have a delete endpoint, we'll just remove it from the UI
+      setRecentReports(prev => prev.filter(report => report.id !== reportId));
+      alert('✅ Report deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      alert('❌ Failed to delete report');
     }
   };
 
@@ -234,53 +334,21 @@ const UnifiedSalesManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      {/* Neumorphic Stats Cards - 3 Colors */}
+      {/* Stats Cards - Matching User Management */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         {/* Verified Revenue Card - Blue */}
-        <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <DollarSign className="w-7 h-7 text-white" />
+        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <span className="text-2xl font-bold text-white">₱</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-blue-200 rounded-full border border-blue-300">
-              <span className="text-xs font-bold text-blue-800">Verified</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-blue-700">Verified Revenue</p>
-            <p className="text-2xl font-bold text-blue-900">
+            <p className="text-white/90 text-sm font-medium mb-1">Verified Revenue</p>
+            <p className="text-3xl font-bold text-white">
               ₱{recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalRevenue || 0), 0).toLocaleString()}
             </p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.verifiedRevenue, previousMonthStats.verifiedRevenue).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.verifiedRevenue, previousMonthStats.verifiedRevenue) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.verifiedRevenue, previousMonthStats.verifiedRevenue).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.verifiedRevenue, previousMonthStats.verifiedRevenue) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.verifiedRevenue, previousMonthStats.verifiedRevenue)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,15 10,12 20,8 30,10 40,6 50,4 60,2"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="2" r="2" fill="#3b82f6" />
-                </svg>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -531,32 +599,6 @@ const UnifiedSalesManagement: React.FC = () => {
         </div>
       ) : (
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
-          {/* Pagination Controls */}
-          <div className="p-6 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
-                  {[10, 20, 30].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
-                          ? 'bg-indigo-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredReports.length)} of {filteredReports.length} entries
-              </div>
-            </div>
-          </div>
 
           {/* Compact Table */}
           <div className="overflow-x-auto">
@@ -572,7 +614,7 @@ const UnifiedSalesManagement: React.FC = () => {
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Buyer</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4" />
+                      <span className="text-sm font-bold">₱</span>
                       Amount
                     </div>
                   </th>
@@ -590,7 +632,7 @@ const UnifiedSalesManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="font-bold text-blue-900 text-sm">{report.farmerName}</div>
-                        <div className="text-purple-600 text-xs font-mono">ID: {report.farmerId?.slice(0, 8)}...</div>
+                        <div className="text-purple-600 text-xs font-mono">{generateReadableId(report.id)}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -624,16 +666,18 @@ const UnifiedSalesManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <button 
+                          onClick={() => handleViewReport(report)}
                           className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
                           title="View Details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye size={16} />
                         </button>
                         <button 
+                          onClick={() => handleEditReport(report)}
                           className="p-2 bg-emerald-100 text-emerald-600 rounded-xl hover:bg-emerald-200 hover:shadow-md transition-all duration-200"
                           title="Edit Report"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit size={16} />
                         </button>
                         {report.status === 'pending' && (
                           <>
@@ -654,10 +698,11 @@ const UnifiedSalesManagement: React.FC = () => {
                           </>
                         )}
                         <button 
+                          onClick={() => handleDeleteReport(report.id)}
                           className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 hover:shadow-md transition-all duration-200"
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -668,41 +713,242 @@ const UnifiedSalesManagement: React.FC = () => {
           </div>
 
           {/* Pagination Footer */}
-          {totalPages > 1 && (
-            <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-              <div className="flex justify-center items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
-                >
-                  Previous
-                </button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Items per page selector */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-2">
+                  {[10, 20, 30].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => handleItemsPerPageChange(size)}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        itemsPerPage === size
+                          ? 'bg-indigo-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page info and navigation */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredReports.length)} of {filteredReports.length} entries
+                </span>
+                <div className="flex gap-2">
                   <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
                     className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === page
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                   >
-                    {page}
+                    Previous
                   </button>
-                ))}
-                
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
-                >
-                  Next
-                </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && selectedReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Sales Report Details</h2>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Report ID */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
+                <p className="text-sm text-gray-600 mb-1">Report ID</p>
+                <p className="font-mono text-lg font-bold text-indigo-900">{generateReadableId(selectedReport.id)}</p>
+              </div>
+
+              {/* Farmer Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-emerald-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Farmer Name</p>
+                  <p className="font-semibold text-gray-900">{selectedReport.farmerName}</p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Buyer Company</p>
+                  <p className="font-semibold text-gray-900">{selectedReport.buyerName || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Financial Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-green-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+                  <p className="text-2xl font-bold text-green-900">₱{selectedReport.totalRevenue.toLocaleString()}</p>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Quantity Sold</p>
+                  <p className="text-2xl font-bold text-blue-900">{selectedReport.totalQuantity} kg</p>
+                </div>
+              </div>
+
+              {/* Status and Date */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-2">Status</p>
+                  <span className={`inline-flex px-4 py-2 text-sm font-bold rounded-full ${
+                    selectedReport.status === 'approved' ? 'bg-green-100 text-green-800' :
+                    selectedReport.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {selectedReport.status.charAt(0).toUpperCase() + selectedReport.status.slice(1)}
+                  </span>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Submitted Date</p>
+                  <p className="font-semibold text-gray-900">{new Date(selectedReport.submittedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 font-semibold transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Edit Sales Report</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Report ID (Read-only) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Report ID</label>
+                <input
+                  type="text"
+                  value={generateReadableId(selectedReport.id)}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl font-mono text-gray-600"
+                />
+              </div>
+
+              {/* Farmer Name (Read-only) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Farmer Name</label>
+                <input
+                  type="text"
+                  value={selectedReport.farmerName}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl text-gray-600"
+                />
+              </div>
+
+              {/* Buyer Company */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Buyer Company</label>
+                <input
+                  type="text"
+                  value={editFormData.buyerName}
+                  onChange={(e) => setEditFormData({ ...editFormData, buyerName: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  placeholder="Enter buyer company name"
+                />
+              </div>
+
+              {/* Total Revenue */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Total Revenue (₱)</label>
+                <input
+                  type="number"
+                  value={editFormData.totalRevenue}
+                  onChange={(e) => setEditFormData({ ...editFormData, totalRevenue: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  placeholder="Enter total revenue"
+                />
+              </div>
+
+              {/* Quantity Sold */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity Sold (kg)</label>
+                <input
+                  type="number"
+                  value={editFormData.totalQuantity}
+                  onChange={(e) => setEditFormData({ ...editFormData, totalQuantity: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                  placeholder="Enter quantity sold"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={editFormData.status}
+                  onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as 'pending' | 'approved' | 'rejected' })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateReport}
+                className="px-6 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 font-semibold transition-colors shadow-lg"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

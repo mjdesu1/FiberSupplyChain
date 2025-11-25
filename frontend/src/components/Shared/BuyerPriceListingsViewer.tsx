@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  DollarSign, 
   Phone, 
   MapPin, 
   FileText, 
   Calendar,
   Building,
   Mail,
-  Filter,
   Search,
   TrendingUp,
   CheckCircle,
@@ -16,10 +14,8 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
-  BarChart3,
   Activity,
-  Award,
-  Image as ImageIcon
+  Award
 } from 'lucide-react';
 
 interface BuyerListing {
@@ -215,98 +211,80 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
-            <BarChart3 className="text-white" size={28} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Buyer Price Listings</h1>
-            <p className="text-gray-500 text-sm">Real-time market prices from registered buyers</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards - Neumorphic Design */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Stats Cards - Compact Design */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Total Listings Card */}
-        <div className="bg-gray-50 rounded-3xl p-6 shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] hover:shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg">
-              <Building className="text-white" size={20} />
+        <div className="bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-4 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <Building className="text-white" size={18} />
+              </div>
             </div>
-            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Total</span>
-          </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</p>
-          <p className="text-sm text-gray-500 font-medium">Active Listings</p>
-          <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-400 to-blue-500" style={{width: '100%'}}></div>
+            <p className="text-white/90 text-xs font-medium mb-1">Active Listings</p>
+            <p className="text-3xl font-bold text-white">{stats.total}</p>
           </div>
         </div>
 
-        {/* Available Buyers Card */}
-        <div className="bg-gray-50 rounded-3xl p-6 shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] hover:shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl shadow-lg">
-              <CheckCircle className="text-white" size={20} />
+        {/* Avg Class A Price Card */}
+        <div className="bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-4 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <Award className="text-white" size={18} />
+              </div>
+              <span className="text-xs font-semibold text-white/90 bg-white/20 px-2 py-1 rounded-full">Premium</span>
             </div>
-            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-              +{stats.total > 0 ? Math.round((stats.available/stats.total)*100) : 0}%
-            </span>
-          </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{stats.available}</p>
-          <p className="text-sm text-gray-500 font-medium">Available Now</p>
-          <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500" style={{width: `${(stats.available/stats.total)*100}%`}}></div>
+            <p className="text-white/90 text-xs font-medium mb-1">Avg Class A</p>
+            <p className="text-2xl font-bold text-white">
+              ₱{stats.avgClassAPrice > 0 ? stats.avgClassAPrice.toFixed(2) : '0.00'}
+            </p>
+            <p className="text-white/70 text-xs mt-1">Highest Quality</p>
           </div>
         </div>
 
-        {/* Avg T1 Price Card */}
-        <div className="bg-gray-50 rounded-3xl p-6 shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] hover:shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl shadow-lg">
-              <Award className="text-white" size={20} />
+        {/* Avg Class B Price Card */}
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-4 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <TrendingUp className="text-white" size={18} />
+              </div>
+              <span className="text-xs font-semibold text-white/90 bg-white/20 px-2 py-1 rounded-full">Standard</span>
             </div>
-            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Premium</span>
-          </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">
-            ₱{stats.avgClassAPrice > 0 ? stats.avgClassAPrice.toFixed(2) : '0.00'}
-          </p>
-          <p className="text-sm text-gray-500 font-medium">Avg Class A</p>
-          <div className="mt-3 flex items-center gap-2">
-            <Activity size={14} className="text-emerald-500" />
-            <span className="text-xs text-emerald-600 font-semibold">Highest Quality</span>
+            <p className="text-white/90 text-xs font-medium mb-1">Avg Class B</p>
+            <p className="text-2xl font-bold text-white">
+              ₱{stats.avgClassBPrice > 0 ? stats.avgClassBPrice.toFixed(2) : '0.00'}
+            </p>
+            <p className="text-white/70 text-xs mt-1">Standard Quality</p>
           </div>
         </div>
 
-        {/* Avg T2 Price Card */}
-        <div className="bg-gray-50 rounded-3xl p-6 shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] hover:shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg">
-              <TrendingUp className="text-white" size={20} />
+        {/* Avg Class C Price Card */}
+        <div className="bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-4 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <Activity className="text-white" size={18} />
+              </div>
+              <span className="text-xs font-semibold text-white/90 bg-white/20 px-2 py-1 rounded-full">Basic</span>
             </div>
-            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Standard</span>
-          </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">
-            ₱{stats.avgClassBPrice > 0 ? stats.avgClassBPrice.toFixed(2) : '0.00'}
-          </p>
-          <p className="text-sm text-gray-500 font-medium">Avg Class B</p>
-          <div className="mt-3 flex items-center gap-2">
-            <Activity size={14} className="text-blue-500" />
-            <span className="text-xs text-blue-600 font-semibold">Standard Quality</span>
+            <p className="text-white/90 text-xs font-medium mb-1">Avg Class C</p>
+            <p className="text-2xl font-bold text-white">
+              ₱{stats.avgClassCPrice > 0 ? stats.avgClassCPrice.toFixed(2) : '0.00'}
+            </p>
+            <p className="text-white/70 text-xs mt-1">Basic Quality</p>
           </div>
         </div>
       </div>
 
-      {/* Filters - Neumorphic Design */}
-      <div className="bg-gray-50 rounded-3xl p-6 mb-8 shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff]">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="text-gray-600" size={20} />
-          <h3 className="text-lg font-bold text-gray-900">Filter & Search</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Filters */}
+      <div className="bg-white rounded-2xl p-6 mb-8 shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -314,14 +292,14 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
               placeholder="Search company, municipality..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff] focus:outline-none focus:shadow-[inset_6px_6px_12px_#d1d5db,inset_-6px_-6px_12px_#ffffff] transition-all duration-200 text-gray-900 placeholder-gray-400"
+              className="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 placeholder-gray-400"
             />
           </div>
 
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-3 bg-gray-50 border-none rounded-2xl shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff] focus:outline-none focus:shadow-[inset_6px_6px_12px_#d1d5db,inset_-6px_-6px_12px_#ffffff] transition-all duration-200 text-gray-900 font-medium"
+            className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium"
           >
             <option value="all">All Types</option>
             <option value="class_a">🏆 Class A</option>
@@ -332,7 +310,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
           <select
             value={filterMunicipality}
             onChange={(e) => setFilterMunicipality(e.target.value)}
-            className="px-4 py-3 bg-gray-50 border-none rounded-2xl shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff] focus:outline-none focus:shadow-[inset_6px_6px_12px_#d1d5db,inset_-6px_-6px_12px_#ffffff] transition-all duration-200 text-gray-900 font-medium"
+            className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium"
           >
             <option value="all">All Municipalities</option>
             {municipalities.map(mun => (
@@ -343,7 +321,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
           <select
             value={filterAvailability}
             onChange={(e) => setFilterAvailability(e.target.value)}
-            className="px-4 py-3 bg-gray-50 border-none rounded-2xl shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff] focus:outline-none focus:shadow-[inset_6px_6px_12px_#d1d5db,inset_-6px_-6px_12px_#ffffff] transition-all duration-200 text-gray-900 font-medium"
+            className="px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium"
           >
             <option value="all">All Status</option>
             <option value="Available">✅ Available</option>
@@ -352,13 +330,13 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
           </select>
         </div>
 
-        <div className="mt-6 flex justify-between items-center">
+        <div className="flex justify-between items-center">
           <p className="text-sm text-gray-600">
             Showing <span className="font-bold text-gray-900">{filteredListings.length}</span> of <span className="font-bold text-gray-900">{listings.length}</span> listings
           </p>
           <button
             onClick={exportToCSV}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-50 rounded-2xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] hover:shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] active:shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff] transition-all duration-200 font-semibold text-gray-900"
+            className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
           >
             <Download size={18} />
             Export CSV
@@ -372,7 +350,7 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
       ) : filteredListings.length === 0 ? (
-        <div className="bg-gray-50 rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] p-12 text-center">
+        <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
           <Building className="mx-auto text-gray-400 mb-4" size={48} />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No Listings Found</h3>
           <p className="text-gray-600">No buyer price listings match your current filters.</p>
@@ -401,20 +379,20 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
             const currentPrice = availableTypes.find(t => t.type === currentPriceType) || availableTypes[0];
 
             return (
-              <div key={listing.listing_id} className="bg-gray-50 rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] hover:shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff] transition-all duration-300 overflow-hidden">
+              <div key={listing.listing_id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
                 {/* Header with Gradient */}
                 <div className={`bg-gradient-to-br ${
                   currentPrice?.color === 'emerald' ? 'from-emerald-400 to-emerald-600' :
                   currentPrice?.color === 'blue' ? 'from-blue-400 to-blue-600' :
                   'from-amber-400 to-amber-600'
-                } p-6 text-white relative`}>
-                  <div className="flex items-start justify-between mb-3">
+                } p-4 text-white relative`}>
+                  <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Building size={20} />
-                        <h3 className="text-xl font-bold">{listing.company_name}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Building size={18} />
+                        <h3 className="text-lg font-bold">{listing.company_name}</h3>
                       </div>
-                      <p className="text-white/90 text-sm">{listing.contact_person}</p>
+                      <p className="text-white/90 text-xs">{listing.contact_person}</p>
                     </div>
                     {getAvailabilityBadge(listing.availability)}
                   </div>
@@ -448,14 +426,14 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                 </div>
 
                 {/* Card Body */}
-                <div className="p-6">
+                <div className="p-4">
                   {/* Fiber Image - If Available */}
                   {currentPrice?.image && (
-                    <div className="mb-6 rounded-2xl overflow-hidden shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] bg-gray-100">
+                    <div className="mb-4 rounded-xl overflow-hidden shadow-md bg-gray-100">
                       <img 
                         src={currentPrice.image} 
                         alt={`${currentPrice.label} fiber sample`}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-32 object-cover"
                         onError={(e) => {
                           const target = e.currentTarget;
                           target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f3f4f6" width="400" height="200"/%3E%3Ctext fill="%239ca3af" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ENo Image Available%3C/text%3E%3C/svg%3E';
@@ -465,23 +443,23 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                     </div>
                   )}
 
-                  {/* Price Display - Neumorphic */}
-                  <div className="bg-gray-50 rounded-2xl p-6 mb-6 shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff]">
+                  {/* Price Display */}
+                  <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 font-medium mb-2">Current Price per KG</p>
-                      <p className={`text-5xl font-bold ${
+                      <p className="text-xs text-gray-600 font-medium mb-1">Current Price per KG</p>
+                      <p className={`text-3xl font-bold ${
                         currentPrice?.color === 'emerald' ? 'text-emerald-600' :
                         currentPrice?.color === 'blue' ? 'text-blue-600' :
                         'text-amber-600'
                       }`}>
                         ₱{currentPrice?.price ? currentPrice.price.toFixed(2) : '0.00'}
                       </p>
-                      <div className="mt-4 flex items-center justify-center gap-2">
+                      <div className="mt-2 flex items-center justify-center gap-1">
                         {availableTypes.map((type, idx) => (
                           <div
                             key={idx}
-                            className={`h-2 w-2 rounded-full transition-all duration-300 ${
-                              type?.type === currentPriceType ? 'w-6 bg-gray-900' : 'bg-gray-300'
+                            className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                              type?.type === currentPriceType ? 'w-4 bg-gray-900' : 'bg-gray-300'
                             }`}
                           />
                         ))}
@@ -490,65 +468,56 @@ const BuyerPriceListingsViewer: React.FC<BuyerPriceListingsViewerProps> = () => 
                   </div>
 
                   {/* Contact Info Grid */}
-                  <div className="grid grid-cols-1 gap-3 mb-4">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-                      <div className="p-2 bg-gray-50 rounded-lg shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff]">
-                        <Phone size={16} className="text-gray-600" />
-                      </div>
+                  <div className="grid grid-cols-1 gap-2 mb-3">
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <Phone size={14} className="text-gray-500" />
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500 font-medium">Phone</p>
-                        <p className="text-sm text-gray-900 font-semibold">{listing.phone}</p>
+                        <p className="text-xs text-gray-900 font-semibold">{listing.phone}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-                      <div className="p-2 bg-gray-50 rounded-lg shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff]">
-                        <Mail size={16} className="text-gray-600" />
-                      </div>
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <Mail size={14} className="text-gray-500" />
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500 font-medium">Email</p>
-                        <p className="text-sm text-gray-900 font-semibold truncate">{listing.email}</p>
+                        <p className="text-xs text-gray-900 font-semibold truncate">{listing.email}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-                      <div className="p-2 bg-gray-50 rounded-lg shadow-[4px_4px_8px_#d1d5db,-4px_-4px_8px_#ffffff]">
-                        <MapPin size={16} className="text-gray-600" />
-                      </div>
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <MapPin size={14} className="text-gray-500" />
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500 font-medium">Location</p>
-                        <p className="text-sm text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
+                        <p className="text-xs text-gray-900 font-semibold">{listing.barangay}, {listing.municipality}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Payment & Validity */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="p-3 bg-gray-50 rounded-xl shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-                      <div className="flex items-center gap-2 mb-1">
-                        <DollarSign size={14} className="text-gray-500" />
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <span className="text-xs font-bold text-gray-500">₱</span>
                         <p className="text-xs text-gray-500 font-medium">Payment</p>
                       </div>
-                      <p className="text-sm text-gray-900 font-semibold">{listing.payment_terms}</p>
+                      <p className="text-xs text-gray-900 font-semibold">{listing.payment_terms}</p>
                     </div>
 
-                    <div className="p-3 bg-gray-50 rounded-xl shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Calendar size={14} className="text-gray-500" />
+                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <Calendar size={12} className="text-gray-500" />
                         <p className="text-xs text-gray-500 font-medium">Valid Until</p>
                       </div>
-                      <p className="text-sm text-gray-900 font-semibold">{new Date(listing.valid_until).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-900 font-semibold">{new Date(listing.valid_until).toLocaleDateString()}</p>
                     </div>
                   </div>
 
                   {/* Requirements */}
                   {listing.requirements && (
-                    <div className="p-4 bg-gray-50 rounded-xl shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText size={16} className="text-gray-600" />
-                        <p className="text-sm font-bold text-gray-900">Requirements</p>
+                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-1 mb-1">
+                        <FileText size={12} className="text-gray-500" />
+                        <p className="text-xs font-bold text-gray-900">Requirements</p>
                       </div>
-                      <p className="text-sm text-gray-700 leading-relaxed">{listing.requirements}</p>
+                      <p className="text-xs text-gray-700">{listing.requirements}</p>
                     </div>
                   )}
                 </div>

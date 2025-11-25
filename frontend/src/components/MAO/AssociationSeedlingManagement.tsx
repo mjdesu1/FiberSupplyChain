@@ -13,9 +13,7 @@ import {
   X,
   Download,
   Building2,
-  Layers,
-  TrendingUp,
-  TrendingDown
+  Layers
 } from 'lucide-react';
 
 interface Association {
@@ -457,244 +455,90 @@ const AssociationSeedlingManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Calculate real trend data
-  const calculateTrend = (current: number, previous: number) => {
-    if (previous === 0) {
-      if (current === 0) return '0';
-      return `+${current.toLocaleString()}`;
-    }
-    const change = ((current - previous) / previous) * 100;
-    if (Math.abs(change) < 0.1) return '0';
-    return change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
-  };
-
-  // Mock previous month data for trend calculation (in real app, this would come from API)
-  const previousMonthStats = {
-    total: stats.total > 0 ? Math.ceil(stats.total * 0.88) : 0, // 12% increase
-    totalQuantity: stats.totalQuantity > 0 ? Math.ceil(stats.totalQuantity * 0.85) : 0, // 15% increase
-    thisMonth: stats.thisMonth > 0 ? Math.ceil(stats.thisMonth * 0.82) : 0, // 18% increase
-    varieties: stats.varieties > 0 ? Math.ceil(stats.varieties * 0.90) : 0 // 10% increase
-  };
-
-  const currentStats = {
-    total: stats.total,
-    totalQuantity: stats.totalQuantity,
-    thisMonth: stats.thisMonth,
-    varieties: stats.varieties
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      {/* Colorful Stats Cards - 3 Colors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Distributions Card - Blue */}
-        <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <Package className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-blue-200 rounded-full border border-blue-300">
-              <span className="text-xs font-bold text-blue-800">Distributions</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-blue-700">Total Distributions</p>
-            <p className="text-3xl font-bold text-blue-900">{stats.total}</p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.total, previousMonthStats.total).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.total, previousMonthStats.total) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.total, previousMonthStats.total).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.total, previousMonthStats.total) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.total, previousMonthStats.total)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,15 10,12 20,8 30,10 40,6 50,4 60,2"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="2" r="2" fill="#3b82f6" />
-                </svg>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
+      {/* Stats Cards - Matching User Management */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+        {/* Total Distributions Card */}
+        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Package className="w-6 h-6 text-white" />
               </div>
             </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Distributions</p>
+            <p className="text-4xl font-bold text-white">{stats.total}</p>
           </div>
         </div>
 
-        {/* Total Seedlings Card - Green */}
-        <div className="group relative bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <Sprout className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-emerald-200 rounded-full border border-emerald-300">
-              <span className="text-xs font-bold text-emerald-800">Seedlings</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-emerald-700">Total Quantity</p>
-            <p className="text-3xl font-bold text-emerald-900">{stats.totalQuantity.toLocaleString()}</p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,16 10,13 20,10 30,12 40,8 50,5 60,3"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="3" r="2" fill="#10b981" />
-                </svg>
+        {/* Total Seedlings Card */}
+        <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Sprout className="w-6 h-6 text-white" />
               </div>
             </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Quantity</p>
+            <p className="text-4xl font-bold text-white">{stats.totalQuantity.toLocaleString()}</p>
           </div>
         </div>
 
-        {/* This Month Card - Purple */}
-        <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <Calendar className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-purple-200 rounded-full border border-purple-300">
-              <span className="text-xs font-bold text-purple-800">Recent</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-purple-700">This Month</p>
-            <p className="text-3xl font-bold text-purple-900">{stats.thisMonth}</p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.thisMonth, previousMonthStats.thisMonth)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,18 10,15 20,12 30,14 40,10 50,7 60,4"
-                    fill="none"
-                    stroke="#8b5cf6"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="4" r="2" fill="#8b5cf6" />
-                </svg>
+        {/* This Month Card */}
+        <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Calendar className="w-6 h-6 text-white" />
               </div>
             </div>
+            <p className="text-white/90 text-sm font-medium mb-1">This Month</p>
+            <p className="text-4xl font-bold text-white">{stats.thisMonth}</p>
           </div>
         </div>
 
-        {/* Varieties Card - Blue (cycling back) */}
-        <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <Layers className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-blue-200 rounded-full border border-blue-300">
-              <span className="text-xs font-bold text-blue-800">Types</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-blue-700">Varieties</p>
-            <p className="text-3xl font-bold text-blue-900">{stats.varieties}</p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.varieties, previousMonthStats.varieties).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.varieties, previousMonthStats.varieties) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.varieties, previousMonthStats.varieties).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.varieties, previousMonthStats.varieties) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.varieties, previousMonthStats.varieties)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,17 10,14 20,11 30,13 40,9 50,6 60,3"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="3" r="2" fill="#3b82f6" />
-                </svg>
+        {/* Varieties Card */}
+        <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Layers className="w-6 h-6 text-white" />
               </div>
             </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Varieties</p>
+            <p className="text-4xl font-bold text-white">{stats.varieties}</p>
           </div>
         </div>
       </div>
 
-      {/* Colorful Filters Section */}
-      <div className="bg-gradient-to-r from-blue-50 via-emerald-50 to-purple-50 border-2 border-blue-200 rounded-3xl p-6 mb-8 shadow-lg">
+      {/* Modern Filters with Glassmorphism */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 transition-colors" />
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 type="text"
                 placeholder="Search by variety, supplier, association..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
+                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
               />
             </div>
           </div>
 
           <div className="w-full lg:w-56">
             <div className="relative">
-              <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-500 w-5 h-5 pointer-events-none" />
+              <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-emerald-200 rounded-2xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 appearance-none cursor-pointer font-medium text-gray-800 shadow-md"
+                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer"
               >
                 <option value="all">All Status</option>
                 <option value="distributed_to_association">📦 Distributed to Association</option>
@@ -708,10 +552,10 @@ const AssociationSeedlingManagement: React.FC = () => {
           <div className="flex gap-3">
             <button
               onClick={handleExportCSV}
-              className="px-6 py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold group border-2 border-blue-300"
+              className="px-4 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 font-semibold"
               title="Export to CSV"
             >
-              <Download className="w-5 h-5 group-hover:animate-bounce" />
+              <Download className="w-5 h-5" />
               <span className="hidden md:inline">Export</span>
             </button>
 
@@ -720,7 +564,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                 resetForm();
                 setShowAddModal(true);
               }}
-              className="px-6 py-4 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white rounded-2xl hover:from-emerald-500 hover:to-emerald-600 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold border-2 border-emerald-300"
+              className="px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 font-semibold"
             >
               <Plus className="w-5 h-5" />
               <span className="hidden md:inline">Distribute to Association</span>
@@ -748,33 +592,6 @@ const AssociationSeedlingManagement: React.FC = () => {
         </div>
       ) : (
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-[8px_8px_16px_#d1d5db,-8px_-8px_16px_#ffffff] overflow-hidden">
-          {/* Pagination Controls */}
-          <div className="p-6 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
-                  {[10, 20, 50].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
-                          ? 'bg-indigo-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredDistributions.length)} of {filteredDistributions.length} entries
-              </div>
-            </div>
-          </div>
-
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -820,21 +637,36 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-md">
                         {distribution.seedling_photo ? (
                           <img
-                            src={distribution.seedling_photo}
+                            src={distribution.seedling_photo.startsWith('data:') ? distribution.seedling_photo : `http://localhost:3001${distribution.seedling_photo}`}
                             alt="Seedling"
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.parentElement!.innerHTML = '<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                            }}
                           />
                         ) : distribution.packaging_photo ? (
                           <img
-                            src={distribution.packaging_photo}
+                            src={distribution.packaging_photo.startsWith('data:') ? distribution.packaging_photo : `http://localhost:3001${distribution.packaging_photo}`}
                             alt="Packaging"
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.parentElement!.innerHTML = '<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                            }}
                           />
                         ) : distribution.quality_photo ? (
                           <img
-                            src={distribution.quality_photo}
+                            src={distribution.quality_photo.startsWith('data:') ? distribution.quality_photo : `http://localhost:3001${distribution.quality_photo}`}
                             alt="Quality"
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.parentElement!.innerHTML = '<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                            }}
                           />
                         ) : (
                           <Sprout className="w-8 h-8 text-gray-400" />
@@ -875,13 +707,13 @@ const AssociationSeedlingManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-4 py-2 rounded-full text-xs font-bold shadow-md ${
-                        distribution.status === 'distributed_to_association' ? 'bg-blue-500 text-white' :
-                        distribution.status === 'partially_distributed_to_farmers' ? 'bg-amber-500 text-white' :
-                        distribution.status === 'fully_distributed_to_farmers' ? 'bg-emerald-500 text-white' :
-                        'bg-red-500 text-white'
+                      <span className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 ${
+                        distribution.status === 'distributed_to_association' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        distribution.status === 'partially_distributed_to_farmers' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                        distribution.status === 'fully_distributed_to_farmers' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        'bg-red-50 text-red-700 border-red-200'
                       }`}>
-                        {distribution.status === 'distributed_to_association' ? '📦 To Association' :
+                        {distribution.status === 'distributed_to_association' ? '📦 Distributed to Association' :
                          distribution.status === 'partially_distributed_to_farmers' ? '🔄 Ongoing Distribution' :
                          distribution.status === 'fully_distributed_to_farmers' ? '✅ Fully to Farmers' :
                          '❌ Cancelled'}
@@ -940,42 +772,61 @@ const AssociationSeedlingManagement: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination Footer */}
-          {totalPages > 1 && (
-            <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-              <div className="flex justify-center items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
-                >
-                  Previous
-                </button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          {/* Pagination Footer - Matching User Management */}
+          <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Items per page selector */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-2">
+                  {[10, 20, 50].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => handleItemsPerPageChange(size)}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        itemsPerPage === size
+                          ? 'bg-emerald-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page info and navigation */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredDistributions.length)} of {filteredDistributions.length} entries
+                </span>
+                <div className="flex gap-2">
                   <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
                     className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === page
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                   >
-                    {page}
+                    Previous
                   </button>
-                ))}
-                
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
-                >
-                  Next
-                </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -1220,7 +1071,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Recipient Officer</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.association_officers?.full_name || 'N/A'}</p>
+                  <p className="font-medium text-gray-900">{selectedDistribution.association_officers?.full_name || selectedDistribution.recipient_association_name || <span className="text-gray-400 italic">Not specified</span>}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
@@ -1238,7 +1089,7 @@ const AssociationSeedlingManagement: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Distributed By</p>
-                  <p className="font-medium text-gray-900">{selectedDistribution.organization?.full_name || 'N/A'}</p>
+                  <p className="font-medium text-gray-900">{selectedDistribution.organization?.full_name || <span className="text-gray-400 italic">MAO System</span>}</p>
                 </div>
                 {selectedDistribution.remarks && (
                   <div className="col-span-2">
@@ -1293,9 +1144,13 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Seedling Photo</p>
                         <img
-                          src={selectedDistribution.seedling_photo}
+                          src={selectedDistribution.seedling_photo.startsWith('data:') ? selectedDistribution.seedling_photo : `http://localhost:3001${selectedDistribution.seedling_photo}`}
                           alt="Seedling"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-family="Arial" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          }}
                         />
                       </div>
                     )}
@@ -1303,9 +1158,13 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Packaging Photo</p>
                         <img
-                          src={selectedDistribution.packaging_photo}
+                          src={selectedDistribution.packaging_photo.startsWith('data:') ? selectedDistribution.packaging_photo : `http://localhost:3001${selectedDistribution.packaging_photo}`}
                           alt="Packaging"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-family="Arial" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          }}
                         />
                       </div>
                     )}
@@ -1313,9 +1172,13 @@ const AssociationSeedlingManagement: React.FC = () => {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Quality Check Photo</p>
                         <img
-                          src={selectedDistribution.quality_photo}
+                          src={selectedDistribution.quality_photo.startsWith('data:') ? selectedDistribution.quality_photo : `http://localhost:3001${selectedDistribution.quality_photo}`}
                           alt="Quality"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-family="Arial" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          }}
                         />
                       </div>
                     )}

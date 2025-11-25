@@ -156,77 +156,76 @@ const PlantedSeedlings: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Planted Seedlings</h1>
-        <p className="text-gray-600">Detailed records of all planted seedlings by farmers</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-emerald-100 text-sm mb-2">Total Planted</p>
-              <p className="text-4xl font-bold">{totalPlanted.toLocaleString()}</p>
-              <p className="text-emerald-100 text-xs mt-1">seedlings</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
+      {/* Stats Cards - No Animation */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+        <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Sprout className="w-6 h-6 text-white" />
+              </div>
+              <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+                Active
+              </span>
             </div>
-            <div className="p-4 bg-white bg-opacity-20 rounded-xl">
-              <Sprout className="w-10 h-10" />
-            </div>
+            <p className="text-white/80 text-sm font-medium mb-1">Total Planted</p>
+            <p className="text-4xl font-bold text-white">{totalPlanted.toLocaleString()}</p>
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm mb-2">Total Records</p>
-              <p className="text-4xl font-bold">{filteredSeedlings.length}</p>
-              <p className="text-blue-100 text-xs mt-1">distributions</p>
+        <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
             </div>
-            <div className="p-4 bg-white bg-opacity-20 rounded-xl">
-              <Calendar className="w-10 h-10" />
-            </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Records</p>
+            <p className="text-4xl font-bold text-white">{filteredSeedlings.length}</p>
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm mb-2">Total Farmers</p>
-              <p className="text-4xl font-bold">{new Set(filteredSeedlings.map(s => s.farmer_name)).size}</p>
-              <p className="text-purple-100 text-xs mt-1">unique farmers</p>
+        <div className="group relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <User className="w-6 h-6 text-white" />
+              </div>
             </div>
-            <div className="p-4 bg-white bg-opacity-20 rounded-xl">
-              <User className="w-10 h-10" />
-            </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Total Farmers</p>
+            <p className="text-4xl font-bold text-white">{new Set(filteredSeedlings.map(s => s.farmer_name)).size}</p>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+      {/* Modern Filters with Glassmorphism */}
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search farmer, variety, location..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search farmer, variety, location..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
+              />
+            </div>
           </div>
 
           {/* Variety Filter */}
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
             <select
               value={varietyFilter}
               onChange={(e) => setVarietyFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent appearance-none"
+              className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer"
             >
               <option value="all">All Varieties</option>
               {varieties.map(v => (
@@ -237,11 +236,11 @@ const PlantedSeedlings: React.FC = () => {
 
           {/* Municipality Filter */}
           <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
             <select
               value={municipalityFilter}
               onChange={(e) => setMunicipalityFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent appearance-none"
+              className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer"
             >
               <option value="all">All Municipalities</option>
               {municipalities.map(m => (
@@ -252,29 +251,8 @@ const PlantedSeedlings: React.FC = () => {
         </div>
       </div>
 
-      {/* Table Controls */}
-      <div className="bg-white rounded-t-2xl shadow-lg p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-          >
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-          <span className="text-sm text-gray-600">entries</span>
-        </div>
-        <div className="text-sm text-gray-600">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredSeedlings.length)} of {filteredSeedlings.length} records
-        </div>
-      </div>
+      {/* Table Card */}
+      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
 
       {/* Table */}
       {filteredSeedlings.length === 0 ? (
@@ -285,9 +263,9 @@ const PlantedSeedlings: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="bg-white shadow-lg overflow-x-auto">
+          <div className="bg-white/90 backdrop-blur-sm shadow-lg overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Farmer</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Variety</th>
@@ -358,44 +336,67 @@ const PlantedSeedlings: React.FC = () => {
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="bg-white rounded-b-2xl shadow-lg p-4 flex items-center justify-between">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </button>
-            
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
-                    currentPage === page
-                      ? 'bg-emerald-500 text-white'
-                      : 'border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
+          {/* Pagination Footer - Matching User Management */}
+          <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Items per page selector */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-2">
+                  {[10, 20, 50].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => {
+                        setItemsPerPage(size);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        itemsPerPage === size
+                          ? 'bg-emerald-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              {/* Page info and navigation */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredSeedlings.length)} of {filteredSeedlings.length} entries
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </>
       )}
+      </div>
 
       {/* View Details Modal */}
       {selectedSeedling && (

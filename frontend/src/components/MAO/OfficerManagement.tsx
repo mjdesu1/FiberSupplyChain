@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Edit, Trash2, Shield, User as UserIcon, UserPlus, Eye, Lock, X, Mail, Phone, MapPin, Calendar, Briefcase, Clock, Download, TrendingUp, CheckCircle } from 'lucide-react';
+import { Users, Search, Edit, Trash2, Shield, User as UserIcon, UserPlus, Eye, Lock, X, Mail, Phone, MapPin, Calendar, Briefcase, Clock, TrendingUp, CheckCircle } from 'lucide-react';
 import CreateOfficerModal from './CreateOfficerModal';
 
 interface Officer {
@@ -377,7 +377,7 @@ const OfficerManagement: React.FC = () => {
                           <div className="font-medium text-gray-900">{officer.full_name}</div>
                           {officer.position === 'Administrator' && (
                             <span className="inline-flex items-center gap-1 text-xs text-amber-600">
-                              <Shield className="w-3 h-3" />
+                              <span>🛡️</span>
                               Admin
                             </span>
                           )}
@@ -559,7 +559,7 @@ const OfficerManagement: React.FC = () => {
                   </span>
                   {selectedOfficer.is_super_admin && (
                     <span className="px-4 py-2 rounded-full text-sm font-medium bg-amber-100 text-amber-700">
-                      ★ Super Admin
+                      ⭐ Super Admin
                     </span>
                   )}
                 </div>

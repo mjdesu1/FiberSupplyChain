@@ -10,10 +10,7 @@ import {
   Calendar,
   Sprout,
   X,
-  Edit,
-  TrendingUp,
-  TrendingDown,
-  Archive
+  Edit
 } from 'lucide-react';
 
 interface Harvest {
@@ -293,37 +290,6 @@ export default function MAOHarvestVerificationPage() {
     }
   };
 
-  const handleAddToInventory = async (harvest: Harvest) => {
-    if (!confirm(`Add this harvest to CUSAFA inventory?\n\nFarmer: ${harvest.farmer_name}\nVariety: ${harvest.abaca_variety}\nQuantity: ${harvest.dry_fiber_output_kg} kg`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/cusafa-inventory/add/${harvest.harvest_id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          location: 'CUSAFA Warehouse',
-          notes: `Added from harvest verification - ${harvest.farmer_name}`
-        })
-      });
-
-      if (response.ok) {
-        alert('✅ Harvest added to CUSAFA inventory successfully!');
-        fetchHarvests(); // Refresh the list
-      } else {
-        const error = await response.json();
-        alert(`❌ Error: ${error.error || 'Failed to add to inventory'}`);
-      }
-    } catch (error) {
-      console.error('Error adding to inventory:', error);
-      alert('❌ Failed to add to inventory');
-    }
-  };
 
   const handleSubmitVerification = async () => {
     if (!selectedHarvest) return;
@@ -451,236 +417,76 @@ export default function MAOHarvestVerificationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      {/* Neumorphic Stats Cards - 3 Colors */}
+      {/* Stats Cards - Matching User Management */}
       {statistics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           {/* Total Harvests Card - Blue */}
-          <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg flex items-center justify-center">
-                <Package className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex items-center gap-1 px-3 py-1 bg-blue-200 rounded-full border border-blue-300">
-                <span className="text-xs font-bold text-blue-800">+{statistics.harvests_last_30_days || 0}</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-blue-700">Total Harvests</p>
-              <p className="text-3xl font-bold text-blue-900">{statistics.total_harvests}</p>
-              {/* Mini Line Chart */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {currentStats && previousMonthStats && calculateTrend(currentStats.totalHarvests, previousMonthStats.totalHarvests).startsWith('+') ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
-                  ) : currentStats && previousMonthStats && calculateTrend(currentStats.totalHarvests, previousMonthStats.totalHarvests) === '0' ? (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
-                  )}
-                  <span className={`text-xs font-medium ${
-                    currentStats && previousMonthStats && calculateTrend(currentStats.totalHarvests, previousMonthStats.totalHarvests).startsWith('+') ? 'text-green-600' :
-                    currentStats && previousMonthStats && calculateTrend(currentStats.totalHarvests, previousMonthStats.totalHarvests) === '0' ? 'text-gray-600' : 'text-red-600'
-                  }`}>
-                    {currentStats && previousMonthStats ? calculateTrend(currentStats.totalHarvests, previousMonthStats.totalHarvests) : '0'}
-                  </span>
-                </div>
-                <div className="flex-1 mx-3">
-                  <svg width="60" height="20" className="overflow-visible">
-                    <polyline
-                      points="0,16 10,13 20,10 30,12 40,8 50,5 60,3"
-                      fill="none"
-                      stroke="#3b82f6"
-                      strokeWidth="2"
-                      className="drop-shadow-sm"
-                    />
-                    <circle cx="60" cy="3" r="2" fill="#3b82f6" />
-                  </svg>
+          <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Package className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Total Harvests</p>
+              <p className="text-4xl font-bold text-white">{statistics.total_harvests}</p>
             </div>
           </div>
 
           {/* Total Farmers Card - Emerald */}
-          <div className="group relative bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl shadow-lg flex items-center justify-center">
-                <UsersIcon className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex items-center gap-1 px-3 py-1 bg-emerald-200 rounded-full border border-emerald-300">
-                <span className="text-xs font-bold text-emerald-800">Active</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-emerald-700">Total Farmers</p>
-              <p className="text-3xl font-bold text-emerald-900">{statistics.total_farmers}</p>
-              {/* Mini Line Chart */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {currentStats && previousMonthStats && calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers).startsWith('+') ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
-                  ) : currentStats && previousMonthStats && calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers) === '0' ? (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
-                  )}
-                  <span className={`text-xs font-medium ${
-                    currentStats && previousMonthStats && calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers).startsWith('+') ? 'text-green-600' :
-                    currentStats && previousMonthStats && calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers) === '0' ? 'text-gray-600' : 'text-red-600'
-                  }`}>
-                    {currentStats && previousMonthStats ? calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers) : '0'}
-                  </span>
-                </div>
-                <div className="flex-1 mx-3">
-                  <svg width="60" height="20" className="overflow-visible">
-                    <polyline
-                      points="0,17 10,14 20,11 30,13 40,9 50,6 60,4"
-                      fill="none"
-                      stroke="#10b981"
-                      strokeWidth="2"
-                      className="drop-shadow-sm"
-                    />
-                    <circle cx="60" cy="4" r="2" fill="#10b981" />
-                  </svg>
+          <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <UsersIcon className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Total Farmers</p>
+              <p className="text-4xl font-bold text-white">{statistics.total_farmers}</p>
             </div>
           </div>
 
           {/* Total Fiber Card - Purple */}
-          <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl shadow-lg flex items-center justify-center">
-                <Sprout className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex items-center gap-1 px-3 py-1 bg-purple-200 rounded-full border border-purple-300">
-                <span className="text-xs font-bold text-purple-800">kg</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-purple-700">Total Fiber (kg)</p>
-              <p className="text-3xl font-bold text-purple-900">{statistics.total_fiber_kg?.toFixed(2)}</p>
-              {/* Mini Line Chart */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {currentStats && previousMonthStats && calculateTrend(currentStats.totalFiber, previousMonthStats.totalFiber).startsWith('+') ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
-                  ) : currentStats && previousMonthStats && calculateTrend(currentStats.totalFiber, previousMonthStats.totalFiber) === '0' ? (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
-                  )}
-                  <span className={`text-xs font-medium ${
-                    currentStats && previousMonthStats && calculateTrend(currentStats.totalFiber, previousMonthStats.totalFiber).startsWith('+') ? 'text-green-600' :
-                    currentStats && previousMonthStats && calculateTrend(currentStats.totalFiber, previousMonthStats.totalFiber) === '0' ? 'text-gray-600' : 'text-red-600'
-                  }`}>
-                    {currentStats && previousMonthStats ? calculateTrend(currentStats.totalFiber, previousMonthStats.totalFiber) : '0'}
-                  </span>
-                </div>
-                <div className="flex-1 mx-3">
-                  <svg width="60" height="20" className="overflow-visible">
-                    <polyline
-                      points="0,18 10,15 20,12 30,14 40,10 50,7 60,4"
-                      fill="none"
-                      stroke="#8b5cf6"
-                      strokeWidth="2"
-                      className="drop-shadow-sm"
-                    />
-                    <circle cx="60" cy="4" r="2" fill="#8b5cf6" />
-                  </svg>
+          <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Sprout className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Total Fiber (kg)</p>
+              <p className="text-4xl font-bold text-white">{statistics.total_fiber_kg?.toFixed(2)}</p>
             </div>
           </div>
 
-          {/* Pending Card - Blue (cycling back) */}
-          <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg flex items-center justify-center">
-                <CheckCircle className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex items-center gap-1 px-3 py-1 bg-blue-200 rounded-full border border-blue-300">
-                <span className="text-xs font-bold text-blue-800">Pending</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-blue-700">Pending</p>
-              <p className="text-3xl font-bold text-blue-900">{statistics.pending_verification}</p>
-              {/* Mini Line Chart */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {currentStats && previousMonthStats && calculateTrend(currentStats.pendingVerification, previousMonthStats.pendingVerification).startsWith('+') ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
-                  ) : currentStats && previousMonthStats && calculateTrend(currentStats.pendingVerification, previousMonthStats.pendingVerification) === '0' ? (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
-                  )}
-                  <span className={`text-xs font-medium ${
-                    currentStats && previousMonthStats && calculateTrend(currentStats.pendingVerification, previousMonthStats.pendingVerification).startsWith('+') ? 'text-green-600' :
-                    currentStats && previousMonthStats && calculateTrend(currentStats.pendingVerification, previousMonthStats.pendingVerification) === '0' ? 'text-gray-600' : 'text-red-600'
-                  }`}>
-                    {currentStats && previousMonthStats ? calculateTrend(currentStats.pendingVerification, previousMonthStats.pendingVerification) : '0'}
-                  </span>
-                </div>
-                <div className="flex-1 mx-3">
-                  <svg width="60" height="20" className="overflow-visible">
-                    <polyline
-                      points="0,8 10,10 20,12 30,9 40,14 50,16 60,18"
-                      fill="none"
-                      stroke="#3b82f6"
-                      strokeWidth="2"
-                      className="drop-shadow-sm"
-                    />
-                    <circle cx="60" cy="18" r="2" fill="#3b82f6" />
-                  </svg>
+          {/* Pending Card - Amber */}
+          <div className="group relative bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <CheckCircle className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Pending</p>
+              <p className="text-4xl font-bold text-white">{statistics.pending_verification}</p>
             </div>
           </div>
 
-          {/* Last 30 Days Card - Emerald (cycling back) */}
-          <div className="group relative bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl shadow-lg flex items-center justify-center">
-                <Calendar className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex items-center gap-1 px-3 py-1 bg-emerald-200 rounded-full border border-emerald-300">
-                <span className="text-xs font-bold text-emerald-800">Recent</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-emerald-700">Last 30 Days</p>
-              <p className="text-3xl font-bold text-emerald-900">{statistics.harvests_last_30_days}</p>
-              {/* Mini Line Chart */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {currentStats && previousMonthStats && calculateTrend(currentStats.harvestsLast30Days, previousMonthStats.harvestsLast30Days).startsWith('+') ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
-                  ) : currentStats && previousMonthStats && calculateTrend(currentStats.harvestsLast30Days, previousMonthStats.harvestsLast30Days) === '0' ? (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
-                  )}
-                  <span className={`text-xs font-medium ${
-                    currentStats && previousMonthStats && calculateTrend(currentStats.harvestsLast30Days, previousMonthStats.harvestsLast30Days).startsWith('+') ? 'text-green-600' :
-                    currentStats && previousMonthStats && calculateTrend(currentStats.harvestsLast30Days, previousMonthStats.harvestsLast30Days) === '0' ? 'text-gray-600' : 'text-red-600'
-                  }`}>
-                    {currentStats && previousMonthStats ? calculateTrend(currentStats.harvestsLast30Days, previousMonthStats.harvestsLast30Days) : '0'}
-                  </span>
-                </div>
-                <div className="flex-1 mx-3">
-                  <svg width="60" height="20" className="overflow-visible">
-                    <polyline
-                      points="0,16 10,13 20,11 30,12 40,9 50,6 60,3"
-                      fill="none"
-                      stroke="#10b981"
-                      strokeWidth="2"
-                      className="drop-shadow-sm"
-                    />
-                    <circle cx="60" cy="3" r="2" fill="#10b981" />
-                  </svg>
+          {/* Last 30 Days Card - Slate */}
+          <div className="group relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Last 30 Days</p>
+              <p className="text-4xl font-bold text-white">{statistics.harvests_last_30_days}</p>
             </div>
           </div>
         </div>
@@ -750,32 +556,6 @@ export default function MAOHarvestVerificationPage() {
         </div>
       ) : (
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
-          {/* Pagination Controls */}
-          <div className="p-6 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Show entries:</span>
-                <div className="flex gap-2">
-                  {[10, 20, 30].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        itemsPerPage === size
-                          ? 'bg-indigo-500 text-white shadow-lg'
-                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredHarvests.length)} of {filteredHarvests.length} entries
-              </div>
-            </div>
-          </div>
 
           {/* Compact Table */}
           <div className="overflow-x-auto">
@@ -872,15 +652,6 @@ export default function MAOHarvestVerificationPage() {
                             </button>
                           </>
                         )}
-                        {harvest.status === 'Verified' && (
-                          <button
-                            onClick={() => handleAddToInventory(harvest)}
-                            className="p-2 bg-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-200 hover:shadow-md transition-all duration-200"
-                            title="Add to CUSAFA Inventory"
-                          >
-                            <Archive className="w-4 h-4" />
-                          </button>
-                        )}
                         <button
                           onClick={() => handleDelete(harvest.harvest_id)}
                           className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 hover:shadow-md transition-all duration-200"
@@ -896,42 +667,61 @@ export default function MAOHarvestVerificationPage() {
             </table>
           </div>
 
-          {/* Pagination Footer */}
-          {totalPages > 1 && (
-            <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-              <div className="flex justify-center items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
-                >
-                  Previous
-                </button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          {/* Pagination Footer - Matching User Management */}
+          <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Items per page selector */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-2">
+                  {[10, 20, 30].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => handleItemsPerPageChange(size)}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        itemsPerPage === size
+                          ? 'bg-emerald-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page info and navigation */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredHarvests.length)} of {filteredHarvests.length} entries
+                </span>
+                <div className="flex gap-2">
                   <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
                     className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                      currentPage === page
-                        ? 'bg-indigo-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50'
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
                     }`}
                   >
-                    {page}
+                    Previous
                   </button>
-                ))}
-                
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50"
-                >
-                  Next
-                </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 

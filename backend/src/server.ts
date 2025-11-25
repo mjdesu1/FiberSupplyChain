@@ -21,6 +21,8 @@ import cusafaInventoryRoutes from './routes/cusafaInventoryRoutes';
 import buyerPurchasesRoutes from './routes/buyerPurchasesRoutes';
 import buyerListingsRoutes from './routes/buyerListingsRoutes';
 import fiberDeliveryRoutes from './routes/fiberDeliveryRoutes';
+import activityLogsRoutes from './routes/activityLogsRoutes';
+import { checkBlockedIp, checkBlockedMac } from './middleware/activityLogger';
 
 // Import config
 import { config } from './config/env';
@@ -35,6 +37,10 @@ const PORT = config.port;
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Increase limit for base64 images
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Security middleware - Check for blocked IPs and MACs
+app.use(checkBlockedIp);
+app.use(checkBlockedMac);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -55,6 +61,7 @@ app.use('/api/cusafa-inventory', cusafaInventoryRoutes);
 app.use('/api/buyer-purchases', buyerPurchasesRoutes);
 app.use('/api/buyer-listings', buyerListingsRoutes);
 app.use('/api/fiber-deliveries', fiberDeliveryRoutes);
+app.use('/api/activity-logs', activityLogsRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'MAO Culiram Abaca System API' });

@@ -1,37 +1,27 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, 
-  UserCheck, 
-  Sprout, 
-  CheckCircle, 
-  LogOut,
-  Menu,
-  X,
+import {
+  LayoutDashboard,
+  UserCheck,
+  Sprout,
+  Calendar,
+  CheckCircle,
+  Package,
+  Truck,
   TrendingUp,
   BarChart3,
   Settings,
+  LogOut,
+  Menu,
+  X,
   ChevronDown,
   User,
   Shield,
-  Calendar,
-  Eye,
-  FileText,
-  DollarSign,
-  Users,
-  ShoppingCart,
-  XCircle,
-  BookOpen,
-  Camera,
-  Mail,
-  Briefcase,
-  Package,
-  Download,
-  Filter,
-  Search,
-  Award,
   Activity,
-  PieChart,
-  Truck,
+  FileText,
+  BookOpen,
+  Users,
+  Award,
+  Eye,
   Clock
 } from 'lucide-react';
 import UserManagement from './UserManagement';
@@ -46,6 +36,7 @@ import MAOHarvestVerificationPage from '../../pages/MAOHarvestVerificationPage';
 import UnifiedSalesManagement from './UnifiedSalesManagement';
 import BuyerPriceListingsViewer from '../Shared/BuyerPriceListingsViewer';
 import DeliveryTrackingMonitor from './DeliveryTrackingMonitor';
+import ActivityLogsManagement from './ActivityLogsManagement';
 
 interface MAODashboardProps {
   onLogout: () => void;
@@ -53,12 +44,12 @@ interface MAODashboardProps {
 
 const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'users' | 'officers' | 'maintenance' | 'seedlings' | 'seedlings-overview' | 'monitoring' | 'content' | 'harvests' | 'sales-analytics' | 'buyer-prices' | 'delivery-tracking'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'users' | 'officers' | 'maintenance' | 'seedlings' | 'seedlings-overview' | 'monitoring' | 'content' | 'harvests' | 'sales-analytics' | 'buyer-prices' | 'delivery-tracking' | 'activity-logs'>('dashboard');
   const [contentTab, setContentTab] = useState<'articles' | 'team'>('articles');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [officerData, setOfficerData] = useState<any>(null);
+  const [, setIsEditMode] = useState(false);
+  const [, setOfficerData] = useState<any>(null);
   const [editFormData, setEditFormData] = useState<any>({
     email: '',
     contact_number: '',
@@ -67,9 +58,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     association_name: '',
     full_name: ''
   });
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [, setLoadingProfile] = useState(false);
+  const [, setSavingProfile] = useState(false);
+  const [, setUploadingPhoto] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   
   // Get user info from localStorage
@@ -145,6 +136,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
@@ -197,6 +189,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -284,17 +277,22 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       completed: 0,
       cancelled: 0,
       totalFiberKg: 0,
-      totalValue: 0
+      totalValue: 0,
+      rawDeliveries: [] as any[]
     }
   });
   const [loadingDashboard, setLoadingDashboard] = useState(true);
-  const [dashboardTab, setDashboardTab] = useState<'production' | 'sales' | 'users'>('production');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [,] = useState<'production' | 'sales' | 'users'>('production');
+  const [,] = useState('');
+  const [,] = useState('');
   const [hoveredPoint, setHoveredPoint] = useState<{month: string, received: number, distributed: number, x: number, y: number} | null>(null);
   const [chartView, setChartView] = useState<'monthly' | 'yearly'>('monthly');
   const [monitoringView, setMonitoringView] = useState<'monthly' | 'yearly'>('monthly');
   const [deliveryView, setDeliveryView] = useState<'monthly' | 'yearly'>('monthly');
+  const [abacaSoldView, setAbacaSoldView] = useState<'monthly' | 'yearly'>('monthly');
+  const [salesChartView, setSalesChartView] = useState<'monthly' | 'yearly'>('yearly');
+  const [deliveryStatusView, setDeliveryStatusView] = useState<'monthly' | 'yearly'>('yearly');
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [dashboardSection, setDashboardSection] = useState<'production' | 'reports' | 'users'>('production');
 
   // Fetch dashboard data
@@ -335,7 +333,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         completed: deliveries.filter((d: any) => d.status === 'Completed').length,
         cancelled: deliveries.filter((d: any) => d.status === 'Cancelled').length,
         totalFiberKg: deliveries.reduce((sum: number, d: any) => sum + parseFloat(d.quantity_kg || 0), 0),
-        totalValue: deliveries.filter((d: any) => d.status === 'Completed').reduce((sum: number, d: any) => sum + parseFloat(d.total_amount || 0), 0)
+        totalValue: deliveries.filter((d: any) => d.status === 'Completed').reduce((sum: number, d: any) => sum + parseFloat(d.total_amount || 0), 0),
+        rawDeliveries: deliveries // Store raw deliveries for filtering
       };
 
       // Calculate monthly data from actual database dates
@@ -371,28 +370,33 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           console.log('📊 Monthly Received:', monthlyReceived);
         }
         
-        // For distributed data, try to fetch from farmer_seedling_distributions
+        // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
         try {
-          const farmerDistRes = await fetch('http://localhost:3001/api/admin/production-report', {
+          const farmerDistRes = await fetch('http://localhost:3001/api/association-seedlings/cusafa/all-distributions', {
             headers: { Authorization: `Bearer ${token}` }
           });
           
           if (farmerDistRes.ok) {
-            const prodData = await farmerDistRes.json();
-            console.log('📦 Production report data:', prodData);
+            const farmerDistData = await farmerDistRes.json();
+            console.log('📦 CUSAFA distributions data:', farmerDistData);
             
-            // Check if there's a totalSeedlingsDistributed value
-            if (prodData.totalSeedlingsDistributed && prodData.totalSeedlingsDistributed > 0) {
-              // Distribute the total across the same month as received
-              const totalDist = prodData.totalSeedlingsDistributed;
-              
-              // Find which month has received data
-              const receivedMonthIndex = monthlyReceived.findIndex(val => val > 0);
-              if (receivedMonthIndex !== -1) {
-                monthlyDistributed[receivedMonthIndex] = totalDist;
-                console.log(`📤 Setting distributed ${totalDist} to month ${receivedMonthIndex + 1}`);
+            // Process farmer distributions (Distributed to farmers)
+            const farmerDists = farmerDistData.farmer_distributions || [];
+            console.log('📤 Processing farmer distributions (Distributed):', farmerDists.length, 'records');
+            
+            farmerDists.forEach((dist: any) => {
+              const date = new Date(dist.date_distributed);
+              if (date.getFullYear() === currentYear) {
+                const monthIndex = date.getMonth();
+                const quantity = parseInt(dist.quantity_distributed || 0);
+                monthlyDistributed[monthIndex] += quantity;
+                console.log(`  Month ${monthIndex + 1}: +${quantity} (Total now: ${monthlyDistributed[monthIndex]})`);
               }
-            }
+            });
+            
+            const totalDistributed = monthlyDistributed.reduce((a, b) => a + b, 0);
+            console.log('✅ Total Distributed from database:', totalDistributed);
+            console.log('📊 Monthly Distributed:', monthlyDistributed);
           }
         } catch (err) {
           console.log('Could not fetch distributed data:', err);
@@ -567,7 +571,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           <div className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>
             <h1 className="text-xl font-bold whitespace-nowrap">MAO Culiram</h1>
             <p className="text-xs text-slate-400 whitespace-nowrap">
-              {isSuperAdmin ? 'â­ Super Admin Panel' : 'ðŸ›¡ï¸ Admin Panel'}
+              {isSuperAdmin ? '⭐ Super Admin Panel' : '🛡️ Admin Panel'}
             </p>
           </div>
           <button
@@ -642,11 +646,11 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
           <button 
             onClick={() => setCurrentPage('sales-analytics')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
               currentPage === 'sales-analytics' ? 'bg-emerald-600' : 'hover:bg-slate-700'
             } ${!sidebarOpen && 'justify-center'}`}
           >
-            <DollarSign className="w-5 h-5 flex-shrink-0" />
+            <span className="text-lg font-bold flex-shrink-0">₱</span>
             <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Sales Management</span>
           </button>
 
@@ -692,9 +696,14 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
             <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Officer Management</span>
           </button>
           
-          <button className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 rounded-lg transition-all duration-200 ${!sidebarOpen && 'justify-center'}`}>
-            <BarChart3 className="w-5 h-5 flex-shrink-0" />
-            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Reports</span>
+          <button 
+            onClick={() => setCurrentPage('activity-logs')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              currentPage === 'activity-logs' ? 'bg-emerald-600' : 'hover:bg-slate-700'
+            } ${!sidebarOpen && 'justify-center'}`}
+          >
+            <Activity className="w-5 h-5 flex-shrink-0" />
+            <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'} overflow-hidden`}>Activity Logs</span>
           </button>
           
           {/* Maintenance Mode - Available to all admins */}
@@ -724,7 +733,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         {/* Header - Always visible on all pages */}
-        <header className="bg-white border-b border-gray-200 px-8 py-6">
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
@@ -738,6 +747,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                  currentPage === 'buyer-prices' ? 'Buyer Price Listings' :
                  currentPage === 'delivery-tracking' ? 'Delivery Tracking Monitor' :
                  currentPage === 'officers' ? 'Officer Management' :
+                 currentPage === 'activity-logs' ? 'Activity Logs & Security' :
                  currentPage === 'maintenance' ? 'Maintenance Mode' :
                  currentPage === 'content' ? 'Content Management' :
                  'Dashboard'}
@@ -758,9 +768,9 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                   </p>
                   <p className="text-xs text-gray-500">
                     {isSuperAdmin ? (
-                      <span className="text-amber-600 font-semibold">â­ Super Admin</span>
+                      <span className="text-amber-600 font-semibold">⭐ Super Admin</span>
                     ) : (
-                      <span className="text-blue-600 font-semibold">ðŸ›¡ï¸ Admin</span>
+                      <span className="text-blue-600 font-semibold">🛡️ Admin</span>
                     )}
                   </p>
                 </div>
@@ -832,6 +842,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
           <DeliveryTrackingMonitor />
         ) : currentPage === 'officers' ? (
           <OfficerManagement />
+        ) : currentPage === 'activity-logs' ? (
+          <ActivityLogsManagement />
         ) : currentPage === 'maintenance' ? (
           <MaintenanceToggle />
         ) : currentPage === 'content' ? (
@@ -934,7 +946,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 mb-1">Received</p>
-                      <p className="text-3xl font-bold text-gray-900">{dashboardData.production.totalSeedlingsReceived.toLocaleString()}</p>
+                      <p className="text-3xl font-bold text-gray-900">{(dashboardData.production?.totalSeedlingsReceived || 0).toLocaleString()}</p>
                       <p className="text-xs text-gray-400 mt-1">+10% this week</p>
                     </div>
 
@@ -948,7 +960,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 mb-1">Distributed</p>
-                      <p className="text-3xl font-bold text-gray-900">{dashboardData.production.totalSeedlingsDistributed.toLocaleString()}</p>
+                      <p className="text-3xl font-bold text-gray-900">{(dashboardData.production?.totalSeedlingsDistributed || 0).toLocaleString()}</p>
                       <p className="text-xs text-gray-400 mt-1">+14.6% this week</p>
                     </div>
 
@@ -962,7 +974,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 mb-1">Planted</p>
-                      <p className="text-3xl font-bold text-gray-900">{dashboardData.production.totalSeedlingsPlanted.toLocaleString()}</p>
+                      <p className="text-3xl font-bold text-gray-900">{(dashboardData.production?.totalSeedlingsPlanted || 0).toLocaleString()}</p>
                       <p className="text-xs text-gray-400 mt-1">-0.9% this week</p>
                     </div>
 
@@ -976,7 +988,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 mb-1">Area Planted</p>
-                      <p className="text-3xl font-bold text-gray-900">{dashboardData.production.totalAreaPlanted.toLocaleString()} <span className="text-lg">ha</span></p>
+                      <p className="text-3xl font-bold text-gray-900">{(dashboardData.production?.totalAreaPlanted || 0).toLocaleString()} <span className="text-lg">ha</span></p>
                       <p className="text-xs text-gray-400 mt-1">+1.3% this week</p>
                     </div>
 
@@ -990,7 +1002,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 mb-1">Harvest Fiber</p>
-                      <p className="text-3xl font-bold text-gray-900">{dashboardData.production.totalHarvestFiber.toLocaleString()} <span className="text-lg">kg</span></p>
+                      <p className="text-3xl font-bold text-gray-900">{(dashboardData.production?.totalHarvestFiber || 0).toLocaleString()} <span className="text-lg">kg</span></p>
                       <p className="text-xs text-gray-400 mt-1">+10% this week</p>
                     </div>
                   </div>
@@ -1503,7 +1515,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           <line x1="0" y1="300" x2="1000" y2="300" stroke="#e5e7eb" strokeWidth="2" />
 
                           {/* Dynamic bars based on data */}
-                          {labels.map((label, i) => {
+                          {labels.map((_, i) => {
                             const barWidth = 1000 / labels.length;
                             const groupX = i * barWidth;
                             const barSpacing = barWidth / 4;
@@ -1618,328 +1630,906 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
 
                 {/* Sales & Delivery Reports Section */}
                 {dashboardSection === 'reports' && (
-                  <div className="space-y-8">
-                    {/* Delivery Section - Top */}
+                  <div className="space-y-6">
+                    {/* Delivery Tracking Analytics Section */}
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-6">Delivery Tracking</h2>
+                      <h2 className="text-xl font-semibold text-gray-800 mb-6">Delivery Tracking Analytics</h2>
                       
-                      {/* Delivery Stats Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Truck className="w-5 h-5 text-blue-600" />
-                            <span className="text-xs text-blue-600">Total</span>
-                          </div>
-                          <p className="text-sm text-gray-500 mb-1">Total Deliveries</p>
-                          <p className="text-3xl font-bold text-gray-900">{dashboardData.deliveries.totalDeliveries}</p>
-                        </div>
-
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="w-5 h-5 text-amber-600" />
-                            <span className="text-xs text-amber-600">In Transit</span>
-                          </div>
-                          <p className="text-sm text-gray-500 mb-1">In Transit</p>
-                          <p className="text-3xl font-bold text-gray-900">{dashboardData.deliveries.inTransit}</p>
-                        </div>
-
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                          <div className="flex items-center gap-2 mb-2">
-                            <CheckCircle className="w-5 h-5 text-emerald-600" />
-                            <span className="text-xs text-emerald-600">Delivered</span>
-                          </div>
-                          <p className="text-sm text-gray-500 mb-1">Delivered</p>
-                          <p className="text-3xl font-bold text-gray-900">{dashboardData.deliveries.delivered}</p>
-                        </div>
-
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Package className="w-5 h-5 text-purple-600" />
-                            <span className="text-xs text-purple-600">Total</span>
-                          </div>
-                          <p className="text-sm text-gray-500 mb-1">Total Fiber</p>
-                          <p className="text-3xl font-bold text-gray-900">{dashboardData.deliveries.totalFiberKg.toLocaleString()} kg</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Delivery Analytics Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Pie Chart - Delivery Status */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Delivery Status Distribution</h3>
-                        <div className="flex items-center justify-center h-64">
-                          <svg viewBox="0 0 200 200" className="w-full h-full max-w-xs">
-                            {(() => {
-                              const total = dashboardData.deliveries.totalDeliveries;
-                              const inTransit = dashboardData.deliveries.inTransit;
-                              const delivered = dashboardData.deliveries.delivered;
-                              const cancelled = dashboardData.deliveries.cancelled || 0;
-                              
-                              if (total === 0) {
-                                return <text x="100" y="100" textAnchor="middle" className="text-sm fill-gray-400">No data</text>;
-                              }
-                              
-                              const inTransitPercent = (inTransit / total) * 100;
-                              const deliveredPercent = (delivered / total) * 100;
-                              const cancelledPercent = (cancelled / total) * 100;
-                              
-                              let currentAngle = 0;
-                              const radius = 80;
-                              const cx = 100;
-                              const cy = 100;
-                              
-                              const createArc = (startAngle: number, endAngle: number) => {
-                                const start = (startAngle * Math.PI) / 180;
-                                const end = (endAngle * Math.PI) / 180;
-                                const x1 = cx + radius * Math.cos(start);
-                                const y1 = cy + radius * Math.sin(start);
-                                const x2 = cx + radius * Math.cos(end);
-                                const y2 = cy + radius * Math.sin(end);
-                                const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-                                return `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-                              };
-                              
-                              return (
-                                <>
-                                  {/* In Transit - Amber */}
-                                  {inTransit > 0 && (
-                                    <path
-                                      d={createArc(currentAngle, currentAngle + (inTransitPercent * 3.6))}
-                                      fill="#f59e0b"
-                                      opacity="0.8"
-                                    />
-                                  )}
-                                  {(() => { currentAngle += inTransitPercent * 3.6; return null; })()}
-                                  
-                                  {/* Delivered - Green */}
-                                  {delivered > 0 && (
-                                    <path
-                                      d={createArc(currentAngle, currentAngle + (deliveredPercent * 3.6))}
-                                      fill="#10b981"
-                                      opacity="0.8"
-                                    />
-                                  )}
-                                  {(() => { currentAngle += deliveredPercent * 3.6; return null; })()}
-                                  
-                                  {/* Cancelled - Red */}
-                                  {cancelled > 0 && (
-                                    <path
-                                      d={createArc(currentAngle, currentAngle + (cancelledPercent * 3.6))}
-                                      fill="#ef4444"
-                                      opacity="0.8"
-                                    />
-                                  )}
-                                  
-                                  {/* Center circle */}
-                                  <circle cx={cx} cy={cy} r="50" fill="white" />
-                                  <text x={cx} y={cy - 5} textAnchor="middle" className="text-2xl font-bold fill-gray-800">{total}</text>
-                                  <text x={cx} y={cy + 15} textAnchor="middle" className="text-xs fill-gray-500">Total</text>
-                                </>
-                              );
-                            })()}
-                          </svg>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 mt-4">
-                          <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                              <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                              <span className="text-xs text-gray-600">In Transit</span>
+                      {/* Top Statistics Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        {/* In Transit Card */}
+                        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Truck className="w-5 h-5 text-blue-500" />
+                              <span className="text-sm text-gray-600">In Transit</span>
                             </div>
-                            <p className="text-lg font-bold text-gray-900">{dashboardData.deliveries.inTransit}</p>
                           </div>
-                          <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                              <span className="text-xs text-gray-600">Delivered</span>
+                          <p className="text-3xl font-bold text-gray-900 mb-1">{dashboardData.deliveries.inTransit}</p>
+                          <p className="text-xs text-green-600">+3.2% this week</p>
+                        </div>
+
+                        {/* Delivered Card */}
+                        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Package className="w-5 h-5 text-emerald-500" />
+                              <span className="text-sm text-gray-600">Delivered</span>
                             </div>
-                            <p className="text-lg font-bold text-gray-900">{dashboardData.deliveries.delivered}</p>
                           </div>
-                          <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                              <span className="text-xs text-gray-600">Cancelled</span>
+                          <p className="text-3xl font-bold text-gray-900 mb-1">{dashboardData.deliveries.delivered}</p>
+                          <p className="text-xs text-gray-400">0% this week</p>
+                        </div>
+
+                        {/* Completed Card */}
+                        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="w-5 h-5 text-purple-500" />
+                              <span className="text-sm text-gray-600">Completed</span>
                             </div>
-                            <p className="text-lg font-bold text-gray-900">{dashboardData.deliveries.cancelled || 0}</p>
                           </div>
+                          <p className="text-3xl font-bold text-gray-900 mb-1">{dashboardData.deliveries.completed}</p>
+                          <p className="text-xs text-gray-400">0% this week</p>
+                        </div>
+
+                        {/* Cancelled Card */}
+                        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <X className="w-5 h-5 text-red-500" />
+                              <span className="text-sm text-gray-600">Cancelled</span>
+                            </div>
+                          </div>
+                          <p className="text-3xl font-bold text-gray-900 mb-1">{dashboardData.deliveries.cancelled || 0}</p>
+                          <p className="text-xs text-gray-400">0% this week</p>
                         </div>
                       </div>
 
-                      {/* Line Chart - Delivery Fiber Analytics */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-gray-800">Fiber Delivery Analytics</h3>
-                          <select 
-                            value={deliveryView}
-                            onChange={(e) => setDeliveryView(e.target.value as 'monthly' | 'yearly')}
-                            className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          >
-                            <option value="monthly">Monthly</option>
-                            <option value="yearly">Yearly</option>
-                          </select>
-                        </div>
-                        <div className="h-64">
-                          <svg viewBox="0 0 1000 300" className="w-full h-full">
+                      {/* Charts Section */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Delivery Status Distribution - Donut Chart */}
+                        <div className="bg-white rounded-xl shadow-sm p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Delivery Status Distribution</h3>
+                            <select 
+                              value={deliveryStatusView}
+                              onChange={(e) => setDeliveryStatusView(e.target.value as 'monthly' | 'yearly')}
+                              className="text-gray-600 border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                              <option value="monthly">Monthly</option>
+                              <option value="yearly">Yearly</option>
+                            </select>
+                          </div>
+
+                          {/* Month Selector - Only show in monthly view */}
+                          {deliveryStatusView === 'monthly' && (
+                            <div className="mb-4">
+                              <select 
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                className="w-full text-gray-600 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              >
+                                <option value={0}>January</option>
+                                <option value={1}>February</option>
+                                <option value={2}>March</option>
+                                <option value={3}>April</option>
+                                <option value={4}>May</option>
+                                <option value={5}>June</option>
+                                <option value={6}>July</option>
+                                <option value={7}>August</option>
+                                <option value={8}>September</option>
+                                <option value={9}>October</option>
+                                <option value={10}>November</option>
+                                <option value={11}>December</option>
+                              </select>
+                            </div>
+                          )}
+                          
+                          {/* Donut Chart */}
+                          <div className="flex items-center justify-center mb-8">
+                            <div className="relative w-56 h-56">
+                              <svg viewBox="0 0 200 200" className="transform -rotate-90">
+                                {(() => {
+                                  const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
+                                  const currentYear = new Date().getFullYear();
+                                  
+                                  // Filter deliveries based on view
+                                  const filteredDeliveries = rawDeliveries.filter((d: any) => {
+                                    const deliveryDate = new Date(d.created_at || d.delivery_date);
+                                    if (deliveryStatusView === 'monthly') {
+                                      return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear;
+                                    } else {
+                                      return deliveryDate.getFullYear() === currentYear;
+                                    }
+                                  });
+                                  
+                                  const inTransit = filteredDeliveries.filter((d: any) => d.status === 'In Transit').length;
+                                  const delivered = filteredDeliveries.filter((d: any) => d.status === 'Delivered').length;
+                                  const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
+                                  const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
+                                  const total = inTransit + delivered + completed + cancelled;
+                                  
+                                  if (total === 0) {
+                                    return (
+                                      <circle cx="100" cy="100" r="70" fill="none" stroke="#e5e7eb" strokeWidth="28" />
+                                    );
+                                  }
+                                  
+                                  const segments = [
+                                    { label: 'In Transit', value: inTransit, color: '#8b5cf6' },
+                                    { label: 'Delivered', value: delivered, color: '#10b981' },
+                                    { label: 'Completed', value: completed, color: '#f97316' },
+                                    { label: 'Cancelled', value: cancelled, color: '#ef4444' }
+                                  ];
+                                  
+                                  let currentAngle = 0;
+                                  const radius = 70;
+                                  const strokeWidth = 28;
+                                  const circumference = 2 * Math.PI * radius;
+                                  
+                                  return segments.map((segment, index) => {
+                                    if (segment.value === 0) return null;
+                                    
+                                    const percentage = (segment.value / total);
+                                    const strokeDasharray = `${percentage * circumference} ${circumference}`;
+                                    const rotation = (currentAngle / total) * 360;
+                                    currentAngle += segment.value;
+                                    
+                                    return (
+                                      <circle
+                                        key={index}
+                                        cx="100"
+                                        cy="100"
+                                        r={radius}
+                                        fill="none"
+                                        stroke={segment.color}
+                                        strokeWidth={strokeWidth}
+                                        strokeDasharray={strokeDasharray}
+                                        strokeDashoffset={0}
+                                        style={{ transform: `rotate(${rotation}deg)`, transformOrigin: '100px 100px' }}
+                                        className="transition-all duration-300"
+                                      />
+                                    );
+                                  });
+                                })()}
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="text-center">
+                                  <p className="text-4xl font-bold text-gray-900">
+                                    {(() => {
+                                      const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
+                                      const currentYear = new Date().getFullYear();
+                                      const filteredDeliveries = rawDeliveries.filter((d: any) => {
+                                        const deliveryDate = new Date(d.created_at || d.delivery_date);
+                                        if (deliveryStatusView === 'monthly') {
+                                          return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear;
+                                        } else {
+                                          return deliveryDate.getFullYear() === currentYear;
+                                        }
+                                      });
+                                      return filteredDeliveries.length;
+                                    })()}
+                                  </p>
+                                  <p className="text-sm text-gray-500 mt-1">Total</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Legend - Single Column */}
+                          <div className="space-y-3">
                             {(() => {
-                              // Sample data - replace with actual monthly/yearly data from database
-                              let labels: string[];
-                              let dataPoints: number[];
+                              const rawDeliveries = dashboardData.deliveries.rawDeliveries || [];
+                              const currentYear = new Date().getFullYear();
+                              const filteredDeliveries = rawDeliveries.filter((d: any) => {
+                                const deliveryDate = new Date(d.created_at || d.delivery_date);
+                                if (deliveryStatusView === 'monthly') {
+                                  return deliveryDate.getMonth() === selectedMonth && deliveryDate.getFullYear() === currentYear;
+                                } else {
+                                  return deliveryDate.getFullYear() === currentYear;
+                                }
+                              });
                               
-                              if (deliveryView === 'monthly') {
-                                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                // This should come from database - monthly fiber deliveries
-                                dataPoints = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, dashboardData.deliveries.totalFiberKg];
-                              } else {
-                                const currentYear = new Date().getFullYear();
-                                labels = [currentYear.toString()];
-                                dataPoints = [dashboardData.deliveries.totalFiberKg];
-                              }
-                              
-                              const maxValue = Math.max(...dataPoints, 10);
-                              const stepX = 1000 / (labels.length + 1);
-                              const points = dataPoints.map((val, i) => ({
-                                x: stepX * (i + 1),
-                                y: 280 - (val / maxValue) * 240
-                              }));
-                              
-                              const pathData = points.map((p, i) => 
-                                i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`
-                              ).join(' ');
+                              const inTransit = filteredDeliveries.filter((d: any) => d.status === 'In Transit').length;
+                              const delivered = filteredDeliveries.filter((d: any) => d.status === 'Delivered').length;
+                              const completed = filteredDeliveries.filter((d: any) => d.status === 'Completed').length;
+                              const cancelled = filteredDeliveries.filter((d: any) => d.status === 'Cancelled').length;
                               
                               return (
                                 <>
-                                  {/* Grid lines */}
-                                  <line x1="0" y1="70" x2="1000" y2="70" stroke="#f3f4f6" strokeWidth="1" />
-                                  <line x1="0" y1="140" x2="1000" y2="140" stroke="#f3f4f6" strokeWidth="1" />
-                                  <line x1="0" y1="210" x2="1000" y2="210" stroke="#f3f4f6" strokeWidth="1" />
-                                  <line x1="0" y1="280" x2="1000" y2="280" stroke="#f3f4f6" strokeWidth="1" />
-                                  
-                                  {/* Line */}
-                                  <path
-                                    d={pathData}
-                                    fill="none"
-                                    stroke="#3b82f6"
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                  />
-                                  
-                                  {/* Area fill */}
-                                  <path
-                                    d={`${pathData} L ${points[points.length - 1].x} 300 L ${points[0].x} 300 Z`}
-                                    fill="url(#deliveryGradient)"
-                                  />
-                                  
-                                  {/* Data points */}
-                                  {points.map((point, i) => (
-                                    <circle 
-                                      key={i}
-                                      cx={point.x} 
-                                      cy={point.y} 
-                                      r="5" 
-                                      fill="#3b82f6"
-                                    />
-                                  ))}
-                                  
-                                  {/* X-axis labels */}
-                                  {labels.map((label, i) => (
-                                    <text 
-                                      key={i}
-                                      x={stepX * (i + 1)} 
-                                      y="295" 
-                                      textAnchor="middle" 
-                                      className="text-xs fill-gray-600"
-                                    >
-                                      {label}
-                                    </text>
-                                  ))}
-                                  
-                                  {/* Gradient definition */}
-                                  <defs>
-                                    <linearGradient id="deliveryGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                                    </linearGradient>
-                                  </defs>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                                      <span className="text-sm text-gray-700">In Transit</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-900">{inTransit}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                      <span className="text-sm text-gray-700">Delivered</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-900">{delivered}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                                      <span className="text-sm text-gray-700">Completed</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-900">{completed}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                      <span className="text-sm text-gray-700">Cancelled</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-900">{cancelled}</span>
+                                  </div>
                                 </>
                               );
                             })()}
-                          </svg>
+                          </div>
                         </div>
-                        <div className="text-center mt-4">
-                          <p className="text-sm text-gray-500">Total Fiber Delivered</p>
-                          <p className="text-2xl font-bold text-gray-900">{dashboardData.deliveries.totalFiberKg.toLocaleString()} kg</p>
+
+                        {/* Fiber Delivery Analytics - Bar Chart */}
+                        <div className="bg-white rounded-xl shadow-sm p-6">
+                          <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900">Fiber Delivery Analytics</h3>
+                            <select 
+                              value={deliveryView}
+                              onChange={(e) => setDeliveryView(e.target.value as 'monthly' | 'yearly')}
+                              className="text-gray-600 border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            >
+                              <option value="monthly">Monthly</option>
+                              <option value="yearly">Yearly</option>
+                            </select>
+                          </div>
+
+                          {deliveryView === 'monthly' ? (
+                            <div>
+                              {/* Bar Chart */}
+                              <div className="h-64 relative">
+                                {(() => {
+                                  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                  const currentMonth = new Date().getMonth();
+                                  const data = months.map((_, i) => i === currentMonth ? (dashboardData.deliveries?.totalFiberKg || 0) : 0);
+                                  const maxValue = Math.max(...data, 10);
+                                  
+                                  return (
+                                    <>
+                                      {/* Y-axis labels */}
+                                      <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-xs text-gray-400">
+                                        <span>{Math.round(maxValue)}</span>
+                                        <span>{Math.round(maxValue * 0.75)}</span>
+                                        <span>{Math.round(maxValue * 0.5)}</span>
+                                        <span>{Math.round(maxValue * 0.25)}</span>
+                                        <span>0</span>
+                                      </div>
+
+                                      {/* Bar Chart Area */}
+                                      <div className="ml-10 h-full flex items-end justify-between gap-1">
+                                        {months.map((month, i) => {
+                                          const value = data[i];
+                                          const heightPercent = (value / maxValue) * 100;
+                                          const isCurrentMonth = i === currentMonth;
+                                          
+                                          return (
+                                            <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                              <div className="relative group w-full h-full flex items-end">
+                                                <div
+                                                  className={`w-full rounded-t-md transition-all duration-300 ${
+                                                    isCurrentMonth 
+                                                      ? 'bg-emerald-500 hover:bg-emerald-600' 
+                                                      : 'bg-gray-200'
+                                                  }`}
+                                                  style={{ 
+                                                    height: `${heightPercent}%`, 
+                                                    minHeight: value > 0 ? '4px' : '0px' 
+                                                  }}
+                                                >
+                                                  {value > 0 && (
+                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                                                      {value.toFixed(1)} kg
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              <span className={`text-xs ${isCurrentMonth ? 'text-emerald-600 font-semibold' : 'text-gray-500'}`}>
+                                                {month}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                              
+                              {/* Summary Card */}
+                              <div className="mt-6 bg-gray-50 rounded-lg p-4 text-center border border-gray-100">
+                                <p className="text-sm text-gray-600 mb-1">Total Fiber Delivered</p>
+                                <p className="text-2xl font-bold text-gray-900">{(dashboardData.deliveries?.totalFiberKg || 0).toFixed(2)} kg</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              {/* Bar Chart - Yearly */}
+                              <div className="h-64 relative">
+                                {(() => {
+                                  const currentYear = new Date().getFullYear();
+                                  const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+                                  const data = years.map(y => y === currentYear ? (dashboardData.deliveries?.totalFiberKg || 0) : 0);
+                                  const maxValue = Math.max(...data, 10);
+                                  
+                                  return (
+                                    <>
+                                      {/* Y-axis labels */}
+                                      <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-xs text-gray-400">
+                                        <span>{Math.round(maxValue)}</span>
+                                        <span>{Math.round(maxValue * 0.75)}</span>
+                                        <span>{Math.round(maxValue * 0.5)}</span>
+                                        <span>{Math.round(maxValue * 0.25)}</span>
+                                        <span>0</span>
+                                      </div>
+
+                                      {/* Bar Chart Area */}
+                                      <div className="ml-10 h-full flex items-end justify-between gap-4">
+                                        {years.map((year, i) => {
+                                          const value = data[i];
+                                          const heightPercent = (value / maxValue) * 100;
+                                          const isCurrentYear = year === currentYear;
+                                          
+                                          return (
+                                            <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                              <div className="relative group w-full h-full flex items-end">
+                                                <div
+                                                  className={`w-full rounded-t-md transition-all duration-300 ${
+                                                    isCurrentYear 
+                                                      ? 'bg-emerald-500 hover:bg-emerald-600' 
+                                                      : 'bg-gray-200'
+                                                  }`}
+                                                  style={{ 
+                                                    height: `${heightPercent}%`, 
+                                                    minHeight: value > 0 ? '4px' : '0px' 
+                                                  }}
+                                                >
+                                                  {value > 0 && (
+                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                                                      {value.toFixed(1)} kg
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              <span className={`text-xs ${isCurrentYear ? 'text-emerald-600 font-semibold' : 'text-gray-500'}`}>
+                                                {year}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                              
+                              {/* Summary Card */}
+                              <div className="mt-6 bg-gray-50 rounded-lg p-4 text-center border border-gray-100">
+                                <p className="text-sm text-gray-600 mb-1">Total Fiber Delivered</p>
+                                <p className="text-2xl font-bold text-gray-900">{(dashboardData.deliveries?.totalFiberKg || 0).toFixed(2)} kg</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Sales Report Section - Bottom */}
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-6">Sales Management</h2>
+                      <h2 className="text-xl font-semibold text-gray-800 mb-6">Sales Management</h2>
                     
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                       {/* Verified Revenue */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="w-5 h-5 text-emerald-600" />
-                          <span className="text-xs text-emerald-600">Verified</span>
+                      <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-emerald-500" />
+                            <span className="text-sm text-gray-600">Verified Revenue</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 mb-1">Verified Revenue</p>
-                        <p className="text-3xl font-bold text-gray-900">₱{dashboardData.sales.totalAmount.toLocaleString()}</p>
-                        <p className="text-xs text-emerald-600 mt-1">+13.6%</p>
+                        <p className="text-3xl font-bold text-gray-900 mb-1">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</p>
+                        <p className="text-xs text-green-600">+13.6%</p>
                       </div>
 
                       {/* Pending */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Clock className="w-5 h-5 text-amber-600" />
-                          <span className="text-xs text-amber-600">Pending</span>
+                      <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-amber-500" />
+                            <span className="text-sm text-gray-600">Pending</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 mb-1">Pending Verification</p>
-                        <p className="text-3xl font-bold text-gray-900">0</p>
-                        <p className="text-xs text-gray-400 mt-1">0</p>
+                        <p className="text-3xl font-bold text-gray-900 mb-1">0</p>
+                        <p className="text-xs text-gray-400">0</p>
                       </div>
 
                       {/* Total Farmers */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <User className="w-5 h-5 text-blue-600" />
-                          <span className="text-xs text-blue-600">Active</span>
+                      <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <User className="w-5 h-5 text-blue-500" />
+                            <span className="text-sm text-gray-600">Active</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 mb-1">Total Farmers</p>
-                        <p className="text-3xl font-bold text-gray-900">{dashboardData.users.totalFarmers}</p>
-                        <p className="text-xs text-gray-400 mt-1">0</p>
+                        <p className="text-3xl font-bold text-gray-900 mb-1">{dashboardData.users.totalFarmers}</p>
+                        <p className="text-xs text-gray-400">0</p>
                       </div>
 
                       {/* Total Abaca Sold */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Package className="w-5 h-5 text-purple-600" />
-                          <span className="text-xs text-purple-600">kg</span>
+                      <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-5 h-5 text-purple-500" />
+                            <span className="text-sm text-gray-600">Total Abaca Sold</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 mb-1">Total Abaca Sold</p>
-                        <p className="text-3xl font-bold text-gray-900">{dashboardData.sales.totalKgSold.toLocaleString()} kg</p>
-                        <p className="text-xs text-emerald-600 mt-1">+17.6%</p>
+                        <p className="text-3xl font-bold text-gray-900 mb-1">{(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg</p>
+                        <p className="text-xs text-emerald-600">+17.6%</p>
                       </div>
 
                       {/* Total Reports */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <FileText className="w-5 h-5 text-gray-600" />
-                          <span className="text-xs text-gray-600">Reports</span>
+                      <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-gray-500" />
+                            <span className="text-sm text-gray-600">Reports</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 mb-1">Total Reports</p>
-                        <p className="text-3xl font-bold text-gray-900">{dashboardData.sales.recentSales.length}</p>
-                        <p className="text-xs text-gray-400 mt-1">0</p>
+                        <p className="text-3xl font-bold text-gray-900 mb-1">{dashboardData.sales?.recentSales?.length || 0}</p>
+                        <p className="text-xs text-gray-400">0</p>
+                      </div>
+                    </div>
+
+                    {/* Analytics Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                      {/* Sales Overview - Donut Chart */}
+                      <div className="bg-white rounded-xl shadow-sm p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-6">Sales Overview</h3>
+                        
+                        {/* Donut Chart */}
+                        <div className="flex items-center justify-center mb-6">
+                          <div className="relative w-40 h-40">
+                            <svg viewBox="0 0 200 200" className="transform -rotate-90">
+                              {(() => {
+                                const totalAmount = dashboardData.sales?.totalAmount || 0;
+                                const maxAmount = 500000; // 500k max for visualization
+                                const percentage = Math.min((totalAmount / maxAmount), 1);
+                                const radius = 70;
+                                const strokeWidth = 20;
+                                const circumference = 2 * Math.PI * radius;
+                                const strokeDasharray = `${percentage * circumference} ${circumference}`;
+                                
+                                return (
+                                  <>
+                                    {/* Background circle */}
+                                    <circle
+                                      cx="100"
+                                      cy="100"
+                                      r={radius}
+                                      fill="none"
+                                      stroke="#e5e7eb"
+                                      strokeWidth={strokeWidth}
+                                    />
+                                    {/* Progress circle */}
+                                    <circle
+                                      cx="100"
+                                      cy="100"
+                                      r={radius}
+                                      fill="none"
+                                      stroke="#3b82f6"
+                                      strokeWidth={strokeWidth}
+                                      strokeDasharray={strokeDasharray}
+                                      strokeLinecap="round"
+                                      className="transition-all duration-500"
+                                    />
+                                  </>
+                                );
+                              })()}
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="text-center">
+                                <p className="text-2xl font-bold text-gray-900">₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k</p>
+                                <p className="text-xs text-gray-500 mt-1">Total</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Stats */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Approved</span>
+                            <span className="font-semibold text-emerald-600">₱{(dashboardData.sales?.totalAmount || 0).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Pending</span>
+                            <span className="font-semibold text-gray-900">₱0</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Total Abaca Sold - Bar Chart */}
+                      <div className="bg-white rounded-xl shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-lg font-semibold text-gray-900">Total Abaca Sold</h3>
+                          <select 
+                            value={abacaSoldView}
+                            onChange={(e) => setAbacaSoldView(e.target.value as 'monthly' | 'yearly')}
+                            className="text-gray-600 border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          >
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                          </select>
+                        </div>
+                        
+                        {abacaSoldView === 'monthly' ? (
+                          <div>
+                            {/* Bar Chart - Monthly */}
+                            <div className="h-40 relative mb-4">
+                              {(() => {
+                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                const currentMonth = new Date().getMonth();
+                                const currentYear = new Date().getFullYear();
+                                
+                                // Calculate monthly sales from recentSales data
+                                const monthlySales = new Array(12).fill(0);
+                                (dashboardData.sales?.recentSales || []).forEach((sale: any) => {
+                                  const saleDate = new Date(sale.sale_date);
+                                  if (saleDate.getFullYear() === currentYear) {
+                                    const month = saleDate.getMonth();
+                                    monthlySales[month] += sale.quantity_sold || 0;
+                                  }
+                                });
+                                
+                                const maxValue = Math.max(...monthlySales, 10);
+                                
+                                return (
+                                  <>
+                                    {/* Y-axis labels */}
+                                    <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-xs text-gray-400">
+                                      <span>{Math.round(maxValue)}</span>
+                                      <span>{Math.round(maxValue * 0.75)}</span>
+                                      <span>{Math.round(maxValue * 0.5)}</span>
+                                      <span>{Math.round(maxValue * 0.25)}</span>
+                                      <span>0</span>
+                                    </div>
+
+                                    {/* Bar Chart */}
+                                    <div className="ml-8 h-full flex items-end justify-between gap-1">
+                                      {months.map((month, i) => {
+                                        const value = monthlySales[i];
+                                        const heightPercent = (value / maxValue) * 100;
+                                        
+                                        return (
+                                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                                            <div className="relative group w-full h-full flex items-end">
+                                              <div
+                                                className={`w-full rounded-t-md transition-all ${
+                                                  value > 0 ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-200'
+                                                }`}
+                                                style={{ 
+                                                  height: `${heightPercent}%`,
+                                                  minHeight: value > 0 ? '4px' : '0px'
+                                                }}
+                                              >
+                                                {value > 0 && (
+                                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                                                    {value.toFixed(0)} kg
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                            <span className="text-xs text-gray-500">{month.substring(0, 3)}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                            
+                            {/* Total */}
+                            <div className="text-center pt-4 border-t border-gray-100">
+                              <p className="text-sm text-gray-600 mb-1">Total This Month</p>
+                              <p className="text-2xl font-bold text-purple-600">{(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            {/* Bar Chart - Yearly */}
+                            <div className="h-40 relative mb-4">
+                              {(() => {
+                                const currentYear = new Date().getFullYear();
+                                const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+                                
+                                // Calculate yearly sales from recentSales data
+                                const yearlySales = years.map(year => {
+                                  return (dashboardData.sales?.recentSales || [])
+                                    .filter((sale: any) => new Date(sale.sale_date).getFullYear() === year)
+                                    .reduce((sum: number, sale: any) => sum + (sale.quantity_sold || 0), 0);
+                                });
+                                
+                                const maxValue = Math.max(...yearlySales, 10);
+                                
+                                return (
+                                  <>
+                                    {/* Y-axis labels */}
+                                    <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-xs text-gray-400">
+                                      <span>{Math.round(maxValue)}</span>
+                                      <span>{Math.round(maxValue * 0.75)}</span>
+                                      <span>{Math.round(maxValue * 0.5)}</span>
+                                      <span>{Math.round(maxValue * 0.25)}</span>
+                                      <span>0</span>
+                                    </div>
+
+                                    {/* Bar Chart */}
+                                    <div className="ml-8 h-full flex items-end justify-between gap-3">
+                                      {years.map((year, i) => {
+                                        const value = yearlySales[i];
+                                        const heightPercent = (value / maxValue) * 100;
+                                        const isCurrentYear = year === currentYear;
+                                        
+                                        return (
+                                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                                            <div className="relative group w-full h-full flex items-end">
+                                              <div
+                                                className={`w-full rounded-t-md transition-all ${
+                                                  value > 0 ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-200'
+                                                }`}
+                                                style={{ 
+                                                  height: `${heightPercent}%`,
+                                                  minHeight: value > 0 ? '4px' : '0px'
+                                                }}
+                                              >
+                                                {value > 0 && (
+                                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                                                    {value.toFixed(0)} kg
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                            <span className={`text-xs ${isCurrentYear ? 'text-purple-600 font-semibold' : 'text-gray-500'}`}>
+                                              {year}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                            
+                            {/* Total */}
+                            <div className="text-center pt-4 border-t border-gray-100">
+                              <p className="text-sm text-gray-600 mb-1">Total This Year</p>
+                              <p className="text-2xl font-bold text-purple-600">{(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Sales Trend - Line Chart */}
+                      <div className="bg-white rounded-xl shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-lg font-semibold text-gray-900">Sales Trend</h3>
+                          <select 
+                            value={salesChartView}
+                            onChange={(e) => setSalesChartView(e.target.value as 'monthly' | 'yearly')}
+                            className="text-gray-600 border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                          </select>
+                        </div>
+                        
+                        {salesChartView === 'monthly' ? (
+                          <div>
+                            {/* Monthly Line Chart */}
+                            <div className="h-40 mb-4">
+                              <svg viewBox="0 0 300 100" className="w-full h-full">
+                                <defs>
+                                  <linearGradient id="salesGradientMonthly" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                                  </linearGradient>
+                                </defs>
+                                
+                                {(() => {
+                                  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                  const currentYear = new Date().getFullYear();
+                                  
+                                  // Calculate monthly sales from recentSales data
+                                  const monthlySales = new Array(12).fill(0);
+                                  (dashboardData.sales?.recentSales || []).forEach((sale: any) => {
+                                    const saleDate = new Date(sale.sale_date);
+                                    if (saleDate.getFullYear() === currentYear) {
+                                      const month = saleDate.getMonth();
+                                      monthlySales[month] += sale.total_amount || 0;
+                                    }
+                                  });
+                                  
+                                  const maxValue = Math.max(...monthlySales, 1000);
+                                  
+                                  // Generate path points
+                                  const points = monthlySales.map((value, i) => {
+                                    const x = (i * 300) / 11;
+                                    const y = 100 - ((value / maxValue) * 80);
+                                    return { x, y };
+                                  });
+                                  
+                                  // Create smooth path
+                                  let pathData = `M ${points[0].x} ${points[0].y}`;
+                                  for (let i = 0; i < points.length - 1; i++) {
+                                    const xMid = (points[i].x + points[i + 1].x) / 2;
+                                    const yMid = (points[i].y + points[i + 1].y) / 2;
+                                    pathData += ` Q ${points[i].x} ${points[i].y}, ${xMid} ${yMid}`;
+                                    if (i < points.length - 2) {
+                                      pathData += ` T ${points[i + 1].x} ${points[i + 1].y}`;
+                                    }
+                                  }
+                                  pathData += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+                                  
+                                  const areaPath = `${pathData} L 300 100 L 0 100 Z`;
+                                  
+                                  return (
+                                    <>
+                                      {/* Area fill */}
+                                      <path
+                                        d={areaPath}
+                                        fill="url(#salesGradientMonthly)"
+                                      />
+                                      {/* Line */}
+                                      <path
+                                        d={pathData}
+                                        fill="none"
+                                        stroke="#3b82f6"
+                                        strokeWidth="2"
+                                      />
+                                      {/* Data points */}
+                                      {points.map((point, i) => (
+                                        monthlySales[i] > 0 && (
+                                          <circle
+                                            key={i}
+                                            cx={point.x}
+                                            cy={point.y}
+                                            r="3"
+                                            fill="#3b82f6"
+                                            stroke="white"
+                                            strokeWidth="1.5"
+                                          />
+                                        )
+                                      ))}
+                                    </>
+                                  );
+                                })()}
+                              </svg>
+                            </div>
+                            
+                            {/* Stats */}
+                            <div className="flex justify-between text-sm">
+                              <span className="text-blue-600 font-semibold">
+                                ₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
+                              </span>
+                              <span className="text-gray-600">
+                                {(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            {/* Yearly Line Chart */}
+                            <div className="h-40 mb-4">
+                              <svg viewBox="0 0 300 100" className="w-full h-full">
+                                <defs>
+                                  <linearGradient id="salesGradientYearly" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                                  </linearGradient>
+                                </defs>
+                                
+                                {(() => {
+                                  const currentYear = new Date().getFullYear();
+                                  const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+                                  
+                                  // Calculate yearly sales from recentSales data
+                                  const yearlySales = years.map(year => {
+                                    return (dashboardData.sales?.recentSales || [])
+                                      .filter((sale: any) => new Date(sale.sale_date).getFullYear() === year)
+                                      .reduce((sum: number, sale: any) => sum + (sale.total_amount || 0), 0);
+                                  });
+                                  
+                                  const maxValue = Math.max(...yearlySales, 1000);
+                                  
+                                  // Generate path points
+                                  const points = yearlySales.map((value, i) => {
+                                    const x = (i * 300) / (years.length - 1);
+                                    const y = 100 - ((value / maxValue) * 80);
+                                    return { x, y };
+                                  });
+                                  
+                                  // Create smooth path
+                                  let pathData = `M ${points[0].x} ${points[0].y}`;
+                                  for (let i = 0; i < points.length - 1; i++) {
+                                    const xMid = (points[i].x + points[i + 1].x) / 2;
+                                    const yMid = (points[i].y + points[i + 1].y) / 2;
+                                    pathData += ` Q ${points[i].x} ${points[i].y}, ${xMid} ${yMid}`;
+                                    if (i < points.length - 2) {
+                                      pathData += ` T ${points[i + 1].x} ${points[i + 1].y}`;
+                                    }
+                                  }
+                                  pathData += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+                                  
+                                  const areaPath = `${pathData} L 300 100 L 0 100 Z`;
+                                  
+                                  return (
+                                    <>
+                                      {/* Area fill */}
+                                      <path
+                                        d={areaPath}
+                                        fill="url(#salesGradientYearly)"
+                                      />
+                                      {/* Line */}
+                                      <path
+                                        d={pathData}
+                                        fill="none"
+                                        stroke="#3b82f6"
+                                        strokeWidth="2"
+                                      />
+                                      {/* Data points */}
+                                      {points.map((point, i) => (
+                                        yearlySales[i] > 0 && (
+                                          <circle
+                                            key={i}
+                                            cx={point.x}
+                                            cy={point.y}
+                                            r="3"
+                                            fill="#3b82f6"
+                                            stroke="white"
+                                            strokeWidth="1.5"
+                                          />
+                                        )
+                                      ))}
+                                    </>
+                                  );
+                                })()}
+                              </svg>
+                            </div>
+                            
+                            {/* Stats */}
+                            <div className="flex justify-between text-sm">
+                              <span className="text-blue-600 font-semibold">
+                                ₱{Math.round((dashboardData.sales?.totalAmount || 0) / 1000)}k
+                              </span>
+                              <span className="text-gray-600">
+                                {(dashboardData.sales?.totalKgSold || 0).toLocaleString()} kg
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Sales Table */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Sales</h3>
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="border-b">
+                            <tr className="border-b border-gray-200">
                               <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Farmer</th>
                               <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Buyer</th>
                               <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Amount</th>
@@ -1949,14 +2539,14 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                             </tr>
                           </thead>
                           <tbody>
-                            {dashboardData.sales.recentSales.map((sale: any, index: number) => (
-                              <tr key={index} className="border-b hover:bg-gray-50">
-                                <td className="py-3 px-4 text-sm text-gray-900">{sale.farmer_name || 'N/A'}</td>
-                                <td className="py-3 px-4 text-sm text-gray-900">{sale.buyer_name || 'N/A'}</td>
-                                <td className="py-3 px-4 text-sm text-gray-900">₱{sale.total_amount?.toLocaleString() || '0'}</td>
-                                <td className="py-3 px-4 text-sm text-gray-900">{sale.quantity_sold || 0} kg</td>
+                            {(dashboardData.sales?.recentSales || []).map((sale: any, index: number) => (
+                              <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                <td className="py-3 px-4 text-sm font-medium text-gray-900">{sale.farmer_name || 'N/A'}</td>
+                                <td className="py-3 px-4 text-sm text-gray-700">{sale.buyer_company_name || sale.buyer_name || 'N/A'}</td>
+                                <td className="py-3 px-4 text-sm font-semibold text-gray-900">₱{sale.total_amount?.toLocaleString() || '0'}</td>
+                                <td className="py-3 px-4 text-sm text-gray-700">{sale.quantity_sold || 0} kg</td>
                                 <td className="py-3 px-4">
-                                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
+                                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
                                     Approved
                                   </span>
                                 </td>
