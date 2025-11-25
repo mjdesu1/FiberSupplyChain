@@ -63,6 +63,8 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'distributed' | 'planted' | 'damaged'>('all');
   const [filteredSeedlings, setFilteredSeedlings] = useState<any[]>([]);
+  const [currentPageNum, setCurrentPageNum] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -100,6 +102,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     }
 
     setFilteredSeedlings(filtered);
+    setCurrentPageNum(1); // Reset to first page when filters change
   }, [seedlings, searchTerm, statusFilter]);
 
   const fetchMySeedlings = async () => {
@@ -112,6 +115,15 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       });
       const data = await response.json();
       console.log('📦 Fetched seedlings:', data);
+      // Debug: Check photo fields
+      if (data && data.length > 0) {
+        console.log('🖼️ First seedling photo data:', {
+          seedling_photo: data[0].seedling_photo,
+          packaging_photo: data[0].packaging_photo,
+          quality_photo: data[0].quality_photo,
+          hasPhoto: !!(data[0].seedling_photo || data[0].packaging_photo || data[0].quality_photo)
+        });
+      }
       setSeedlings(data);
     } catch (error) {
       console.error('Error fetching seedlings:', error);
@@ -560,99 +572,98 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
           {currentPage === 'seedlings' && (
             <>
-              {/* Clean Modern Header */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md">
-                      <Sprout className="w-7 h-7 text-white" />
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-10 bg-gradient-to-r from-emerald-50 to-teal-50 -mx-6 px-6 py-4 mb-6 shadow-sm border-b border-emerald-100">
+                <h2 className="text-2xl font-bold text-gray-900">My Seedlings</h2>
+                <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.full_name || 'Farmer'}!</p>
+              </div>
+
+              {/* Modern Stats Cards - UserManagement Style */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 mb-6">
+
+                {/* Total Seedlings Card */}
+                <div className="group relative bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                        <Package className="w-6 h-6 text-white" />
+                      </div>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+                        Total
+                      </span>
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">My Seedling Records</h2>
-                      <p className="text-gray-600 text-sm">Track your abaca seedlings from MAO Culiram</p>
-                    </div>
+                    <p className="text-white/90 text-sm font-medium mb-1">Seedlings Received</p>
+                    <p className="text-4xl font-bold text-white">{Array.isArray(seedlings) ? seedlings.reduce((sum, s) => sum + s.quantity_distributed, 0).toLocaleString() : '0'}</p>
                   </div>
                 </div>
 
-                {/* Clean Stats Grid */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-blue-500 rounded-lg">
-                        <Package className="w-5 h-5 text-white" />
+                {/* Batches Card */}
+                <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                        <FileText className="w-6 h-6 text-white" />
                       </div>
-                      <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">Total</p>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+                        Batches
+                      </span>
                     </div>
-                    <p className="text-3xl font-bold text-blue-900 mb-1">{Array.isArray(seedlings) ? seedlings.reduce((sum, s) => sum + s.quantity_distributed, 0).toLocaleString() : '0'}</p>
-                    <p className="text-blue-600 text-sm font-medium">Seedlings Received</p>
+                    <p className="text-white/90 text-sm font-medium mb-1">Distribution Records</p>
+                    <p className="text-4xl font-bold text-white">{Array.isArray(seedlings) ? seedlings.length : 0}</p>
                   </div>
+                </div>
 
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-indigo-500 rounded-lg">
-                        <FileText className="w-5 h-5 text-white" />
+                {/* Planted Card */}
+                <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                        <CheckCircle className="w-6 h-6 text-white" />
                       </div>
-                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Batches</p>
+                      <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
+                        Success
+                      </span>
                     </div>
-                    <p className="text-3xl font-bold text-indigo-900 mb-1">{Array.isArray(seedlings) ? seedlings.length : 0}</p>
-                    <p className="text-indigo-600 text-sm font-medium">Distribution Records</p>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-purple-500 rounded-lg">
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      </div>
-                      <p className="text-xs font-bold text-purple-700 uppercase tracking-wider">Planted</p>
-                    </div>
-                    <p className="text-3xl font-bold text-purple-900 mb-1">{seedlings.filter(s => s.status === 'planted').length}</p>
-                    <p className="text-purple-600 text-sm font-medium">Successfully Planted</p>
+                    <p className="text-white/90 text-sm font-medium mb-1">Successfully Planted</p>
+                    <p className="text-4xl font-bold text-white">{seedlings.filter(s => s.status === 'planted').length}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Clean Search and Filter Bar */}
-              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 mb-6">
+              {/* Modern Filters with Glassmorphism - UserManagement Style */}
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
                 <div className="flex flex-col md:flex-row gap-4">
                   {/* Search */}
                   <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <div className="relative group">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
                       <input
                         type="text"
-                        placeholder="Search variety, source, or remarks..."
+                        placeholder="Search by variety, source, or remarks..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 placeholder-gray-500"
+                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
                       />
                     </div>
                   </div>
 
                   {/* Status Filter */}
-                  <div className="md:w-64">
+                  <div className="w-full md:w-56">
                     <div className="relative">
-                      <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as any)}
-                        className="w-full pl-12 pr-10 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer text-gray-900"
+                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200 appearance-none cursor-pointer font-medium"
                       >
                         <option value="all">All Status</option>
-                        <option value="distributed">Distributed</option>
-                        <option value="planted">Planted</option>
-                        <option value="damaged">Damaged</option>
+                        <option value="distributed">📦 Distributed</option>
+                        <option value="planted">✓ Planted</option>
+                        <option value="damaged">✗ Damaged</option>
                       </select>
-                      <svg className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Results */}
-                  <div className="flex items-center">
-                    <div className="px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-md">
-                      <p className="text-white/90 text-xs font-semibold uppercase mb-0.5">Results</p>
-                      <p className="text-xl font-bold text-white">{filteredSeedlings.length}</p>
                     </div>
                   </div>
                 </div>
@@ -682,145 +693,259 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   )}
                 </div>
               ) : (
-                <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                  {/* Table Header */}
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                    <div className="flex items-center px-6 py-4 gap-8">
-                      {/* Image Column */}
-                      <div className="w-12 flex-shrink-0">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Photo</p>
-                      </div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <Camera className="w-4 h-4" />
+                              Photo
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <Sprout className="w-4 h-4" />
+                              Variety & Date
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <Package className="w-4 h-4" />
+                              Quantity
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <UsersIcon className="w-4 h-4" />
+                              Source
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-4 h-4" />
+                              Batch ID
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4" />
+                              Remarks
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4" />
+                              Status
+                            </div>
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-100">
+                        {filteredSeedlings
+                          .slice((currentPageNum - 1) * itemsPerPage, currentPageNum * itemsPerPage)
+                          .map((seedling) => (
+                          <tr key={seedling.distribution_id} className="hover:bg-gradient-to-r hover:from-emerald-50/50 hover:to-teal-50/50 transition-all duration-200 group">
+                            {/* Photo */}
+                            <td className="px-6 py-4">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-100 to-teal-200 flex-shrink-0 shadow-md">
+                                {(() => {
+                                  // Check all possible photo fields - photos are in the parent association distribution
+                                  const photoUrl = seedling.association_seedling_distributions?.seedling_photo || 
+                                                   seedling.association_seedling_distributions?.packaging_photo || 
+                                                   seedling.association_seedling_distributions?.quality_photo ||
+                                                   seedling.seedling_photo || 
+                                                   seedling.packaging_photo || 
+                                                   seedling.quality_photo;
+                                  
+                                  // Debug log for first render
+                                  if (seedling.distribution_id && !window.photoDebugLogged) {
+                                    console.log('🖼️ Photo check for seedling:', {
+                                      id: seedling.distribution_id,
+                                      seedling_photo: seedling.seedling_photo ? 'exists' : 'null',
+                                      packaging_photo: seedling.packaging_photo ? 'exists' : 'null',
+                                      quality_photo: seedling.quality_photo ? 'exists' : 'null',
+                                      photoUrl: photoUrl ? photoUrl.substring(0, 50) + '...' : 'none'
+                                    });
+                                    window.photoDebugLogged = true;
+                                  }
+                                  
+                                  if (photoUrl && photoUrl.trim() !== '') {
+                                    return (
+                                      <img 
+                                        src={photoUrl} 
+                                        alt="Seedling" 
+                                        className="w-full h-full object-cover"
+                                        onLoad={() => console.log('✅ Image loaded successfully')}
+                                        onError={(e) => {
+                                          console.error('❌ Image failed to load:', {
+                                            url: photoUrl.substring(0, 100),
+                                            error: e
+                                          });
+                                          e.currentTarget.style.display = 'none';
+                                          const parent = e.currentTarget.parentElement;
+                                          if (parent) {
+                                            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div>';
+                                          }
+                                        }}
+                                      />
+                                    );
+                                  }
+                                  
+                                  console.log('⚠️ No photo URL found, showing icon');
+                                  return (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Sprout className="w-6 h-6 text-emerald-600" />
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </td>
 
-                      {/* Variety Column */}
-                      <div className="w-48">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Variety & Date</p>
-                      </div>
+                            {/* Variety & Date */}
+                            <td className="px-6 py-4">
+                              <div className="font-semibold text-gray-900">{seedling.variety}</div>
+                              <div className="text-xs text-gray-500">{new Date(seedling.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                            </td>
 
-                      {/* Quantity Column */}
-                      <div className="w-32">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Quantity</p>
-                      </div>
+                            {/* Quantity */}
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              <div className="font-medium text-gray-900">{seedling.quantity_distributed} seedlings</div>
+                            </td>
 
-                      {/* Source Column */}
-                      <div className="w-40">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Source</p>
-                      </div>
+                            {/* Source */}
+                            <td className="px-6 py-4 text-sm">
+                              <div className="font-medium text-gray-900">
+                                {seedling.association_seedling_distributions?.source_supplier || 
+                                 seedling.source_supplier || 
+                                 seedling.association_officers?.association_name || 
+                                 'MAO Culiram'}
+                              </div>
+                            </td>
 
-                      {/* Batch ID Column */}
-                      <div className="w-32">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Batch ID</p>
-                      </div>
+                            {/* Batch ID */}
+                            <td className="px-6 py-4 text-sm">
+                              <div className="font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded inline-block">
+                                #{seedling.distribution_id?.slice(0, 8).toUpperCase() || 'N/A'}
+                              </div>
+                            </td>
 
-                      {/* Remarks Column */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Remarks</p>
-                      </div>
+                            {/* Remarks */}
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {seedling.remarks || '-'}
+                            </td>
 
-                      {/* Status Column */}
-                      <div className="w-24">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Status</p>
-                      </div>
+                            {/* Status */}
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                seedling.status === 'planted' ? 'bg-emerald-100 text-emerald-700' :
+                                seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
+                                seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {seedling.status === 'planted' ? 'Complete' : seedling.status.charAt(0).toUpperCase() + seedling.status.slice(1)}
+                              </span>
+                            </td>
 
-                      {/* Actions Column */}
-                      <div className="w-20">
-                        <p className="text-xs font-bold text-white uppercase tracking-wider">Actions</p>
-                      </div>
-                    </div>
+                            {/* Actions */}
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setSelectedSeedling(seedling);
+                                    setShowViewModal(true);
+                                  }}
+                                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md group-hover:bg-blue-50"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                
+                                {seedling.status === 'planted' ? (
+                                  <div className="p-2 text-emerald-600" title="Already Planted">
+                                    <CheckCircle className="w-4 h-4" />
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedSeedling(seedling);
+                                      setShowPlantingModal(true);
+                                    }}
+                                    className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                    title="Mark as Planted"
+                                  >
+                                    <Sprout className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
 
-                  {/* Table Rows */}
-                  <div className="divide-y divide-gray-200">
-                    {filteredSeedlings.map((seedling, index) => (
-                      <div key={seedling.distribution_id} className={`hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                        <div className="flex items-center px-6 py-4 gap-8">
-                        {/* Image/Avatar */}
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-indigo-200 flex-shrink-0">
-                          {seedling.seedling_photo || seedling.packaging_photo || seedling.quality_photo ? (
-                            <img 
-                              src={seedling.seedling_photo || seedling.packaging_photo || seedling.quality_photo} 
-                              alt="Seedling" 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Sprout className="w-6 h-6 text-indigo-500" />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Variety Name */}
-                        <div className="w-48">
-                          <p className="font-semibold text-gray-900 text-sm">{seedling.variety}</p>
-                          <p className="text-xs text-gray-500">{new Date(seedling.date_distributed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                        </div>
-
-                        {/* Quantity */}
-                        <div className="w-32">
-                          <p className="text-sm text-gray-700">{seedling.quantity_distributed} seedlings</p>
-                        </div>
-
-                        {/* Source */}
-                        <div className="w-40">
-                          <p className="text-sm text-gray-700 truncate">{seedling.source_supplier || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">Source</p>
-                        </div>
-
-                        {/* Batch ID */}
-                        <div className="w-32">
-                          <p className="text-sm font-mono text-gray-700">#{seedling.distribution_id?.slice(0, 8) || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">Batch ID</p>
-                        </div>
-
-                        {/* Remarks */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-700 truncate">{seedling.remarks || 'NONE'}</p>
-                        </div>
-
-                        {/* Status Badge */}
-                        <div className="w-24">
-                          <span className={`inline-block px-3 py-1 rounded-md text-xs font-semibold ${
-                            seedling.status === 'planted' ? 'bg-green-100 text-green-700' :
-                            seedling.status === 'distributed' ? 'bg-blue-100 text-blue-700' :
-                            seedling.status === 'damaged' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {seedling.status === 'planted' ? 'Complete' : seedling.status}
-                          </span>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedSeedling(seedling);
-                              setShowViewModal(true);
-                            }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          
-                          {seedling.status === 'planted' ? (
-                            <div className="p-2 text-green-600" title="Already Planted">
-                              <CheckCircle className="w-4 h-4" />
-                            </div>
-                          ) : (
+                  {/* Pagination Controls - UserManagement Style */}
+                  <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      {/* Items per page */}
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                        <div className="flex gap-2">
+                          {[10, 20, 50].map((size) => (
                             <button
+                              key={size}
                               onClick={() => {
-                                setSelectedSeedling(seedling);
-                                setShowPlantingModal(true);
+                                setItemsPerPage(size);
+                                setCurrentPageNum(1);
                               }}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                              title="Mark as Planted"
+                              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                                itemsPerPage === size
+                                  ? 'bg-emerald-500 text-white shadow-lg'
+                                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50 border border-gray-200'
+                              }`}
                             >
-                              <Sprout className="w-4 h-4" />
+                              {size}
                             </button>
-                          )}
+                          ))}
                         </div>
                       </div>
+
+                      {/* Page info and navigation */}
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-600">
+                          Showing {((currentPageNum - 1) * itemsPerPage) + 1} to {Math.min(currentPageNum * itemsPerPage, filteredSeedlings.length)} of {filteredSeedlings.length} entries
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setCurrentPageNum(prev => Math.max(1, prev - 1))}
+                            disabled={currentPageNum === 1}
+                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                              currentPageNum === 1
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                            }`}
+                          >
+                            Previous
+                          </button>
+                          <button
+                            onClick={() => setCurrentPageNum(prev => Math.min(Math.ceil(filteredSeedlings.length / itemsPerPage), prev + 1))}
+                            disabled={currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)}
+                            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                              currentPageNum >= Math.ceil(filteredSeedlings.length / itemsPerPage)
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                            }`}
+                          >
+                            Next
+                          </button>
+                        </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
               )}

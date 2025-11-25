@@ -84,25 +84,9 @@ export class AssociationSeedlingController {
         throw resultError;
       }
 
-      // Map view result to maintain existing nested shape + add inventory fields
-      const mapped = await Promise.all((resultData || []).map(async (row: any) => {
-        let distributedToFarmers = row.distributed_to_farmers ?? 0;
-        let remainingQuantity = row.remaining_quantity ?? row.quantity_distributed;
-
-        // Ensure progress data is accurate even if view/table didn't provide it
-        const { data: farmerDistributions, error: farmerError } = await supabase
-          .from('farmer_seedling_distributions')
-          .select('quantity_distributed')
-          .eq('association_distribution_id', row.distribution_id);
-
-        if (!farmerError && Array.isArray(farmerDistributions)) {
-          distributedToFarmers = farmerDistributions.reduce(
-            (sum: number, dist: any) => sum + (dist.quantity_distributed || 0),
-            0
-          );
-          remainingQuantity = Math.max(row.quantity_distributed - distributedToFarmers, 0);
-        }
-
+      // Map view result to maintain existing nested shape
+      // MAO only tracks what they distributed to associations, NOT what associations distributed to farmers
+      const mapped = (resultData || []).map((row: any) => {
         return {
           distribution_id: row.distribution_id,
           variety: row.variety,
@@ -132,11 +116,12 @@ export class AssociationSeedlingController {
                 contact_number: row.recipient_contact,
               }
             : undefined,
-          distributed_to_farmers: distributedToFarmers,
-          farmers_count: row.farmers_receiving_count ?? 0,
-          remaining_quantity: remainingQuantity,
+          // MAO doesn't track farmer distributions - that's the association's responsibility
+          distributed_to_farmers: 0,
+          farmers_count: 0,
+          remaining_quantity: 0, // MAO gave everything to the association
         };
-      }));
+      });
 
       res.status(200).json(mapped);
     } catch (error) {
@@ -464,13 +449,26 @@ export class AssociationSeedlingController {
         newStatus = 'distributed_to_association';
       }
 
-      // Update the association distribution status
+      // Update the association distribution status and photos (if provided)
+      const updateData: any = {
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+
+      // Add photos if provided in the first distribution (photos are shared across all farmer distributions)
+      if (farmer_distributions[0]?.seedling_photo) {
+        updateData.seedling_photo = farmer_distributions[0].seedling_photo;
+      }
+      if (farmer_distributions[0]?.packaging_photo) {
+        updateData.packaging_photo = farmer_distributions[0].packaging_photo;
+      }
+      if (farmer_distributions[0]?.quality_photo) {
+        updateData.quality_photo = farmer_distributions[0].quality_photo;
+      }
+
       const { error: updateError } = await supabase
         .from('association_seedling_distributions')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('distribution_id', association_distribution_id);
 
       if (updateError) {
@@ -644,6 +642,9 @@ export class AssociationSeedlingController {
             distribution_id,
             source_supplier,
             date_distributed,
+            seedling_photo,
+            packaging_photo,
+            quality_photo,
             organization:distributed_by (
               officer_id,
               full_name

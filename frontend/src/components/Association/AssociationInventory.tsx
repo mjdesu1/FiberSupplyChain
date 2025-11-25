@@ -10,7 +10,9 @@ import {
   Layers,
   Edit,
   Trash2,
-  X
+  X,
+  Camera,
+  Upload
 } from 'lucide-react';
 
 interface AssociationDistribution {
@@ -50,6 +52,9 @@ interface NewFarmerDistributionForm {
   farmer_id: string;
   quantity_distributed: number;
   remarks: string;
+  seedling_photo?: string;
+  packaging_photo?: string;
+  quality_photo?: string;
 }
 
 const DISTRIBUTION_STATUSES = [
@@ -75,7 +80,10 @@ const AssociationInventory: React.FC = () => {
   const [distributeForm, setDistributeForm] = useState<NewFarmerDistributionForm>({
     farmer_id: '',
     quantity_distributed: 0,
-    remarks: ''
+    remarks: '',
+    seedling_photo: '',
+    packaging_photo: '',
+    quality_photo: ''
   });
   const [editForm, setEditForm] = useState({
     remarks: '',
@@ -102,36 +110,10 @@ const AssociationInventory: React.FC = () => {
       const data = await response.json();
       
       if (Array.isArray(data)) {
-        // Calculate remaining quantity for each distribution
-        const distributionsWithRemaining = await Promise.all(
-          data.map(async (dist: AssociationDistribution) => {
-            // Fetch farmer distributions for this association distribution
-            const farmerDistResponse = await fetch(
-              `http://localhost:3001/api/association-seedlings/association/farmer-distributions?association_distribution_id=${dist.distribution_id}`,
-              { headers: { 'Authorization': `Bearer ${token}` } }
-            );
-            
-            let totalDistributed = 0;
-            if (farmerDistResponse.ok) {
-              const farmerDistData = await farmerDistResponse.json();
-              if (Array.isArray(farmerDistData)) {
-                totalDistributed = farmerDistData.reduce((sum: number, fd: any) => 
-                  sum + (fd.quantity_distributed || 0), 0
-                );
-              }
-            }
-            
-            const remaining = Math.max(dist.quantity_distributed - totalDistributed, 0);
-            
-            return {
-              ...dist,
-              remaining_quantity: remaining,
-              distributed_to_farmers: totalDistributed
-            };
-          })
-        );
-        
-        setDistributions(distributionsWithRemaining);
+        // Backend already provides distributed_to_farmers and remaining_quantity
+        // No need to recalculate on frontend
+        console.log('📦 Received distributions:', data);
+        setDistributions(data);
       } else {
         console.error('Invalid data format:', data);
         setDistributions([]);
@@ -199,7 +181,10 @@ const AssociationInventory: React.FC = () => {
     setDistributeForm({
       farmer_id: '',
       quantity_distributed: 0,
-      remarks: ''
+      remarks: '',
+      seedling_photo: '',
+      packaging_photo: '',
+      quality_photo: ''
     });
     setShowDistributeModal(true);
     if (farmers.length === 0) {
@@ -209,8 +194,35 @@ const AssociationInventory: React.FC = () => {
 
   const closeDistributeModal = () => {
     setShowDistributeModal(false);
-    setDistributeForm({ farmer_id: '', quantity_distributed: 0, remarks: '' });
+    setDistributeForm({ farmer_id: '', quantity_distributed: 0, remarks: '', seedling_photo: '', packaging_photo: '', quality_photo: '' });
     setSelectedDistribution(null);
+  };
+
+  // Helper function to convert image to base64
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>, photoType: 'seedling_photo' | 'packaging_photo' | 'quality_photo') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setDistributeForm(prev => ({
+        ...prev,
+        [photoType]: reader.result as string
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDistributeSubmit = async (event: React.FormEvent) => {
@@ -323,7 +335,7 @@ const AssociationInventory: React.FC = () => {
   // Calculate total stats
   const totalReceived = distributions.reduce((sum, d) => sum + d.quantity_distributed, 0);
   const totalDistributed = distributions.reduce((sum, d) => sum + (d.distributed_to_farmers || 0), 0);
-  const totalRemaining = distributions.reduce((sum, d) => sum + (d.remaining_quantity || 0), 0);
+  const totalRemaining = distributions.reduce((sum, d) => sum + (d.remaining_quantity ?? 0), 0);
   const verifiedFarmers = farmers.filter(f => f.is_verified && f.is_active);
 
   const getStatusColor = (status: string) => {
@@ -456,7 +468,8 @@ const AssociationInventory: React.FC = () => {
               <tbody className="divide-y divide-gray-100">
                 {filteredDistributions.map((dist) => {
                   const distributedQty = dist.distributed_to_farmers || 0;
-                  const remainingQty = dist.remaining_quantity || dist.quantity_distributed;
+                  // Use ?? instead of || to handle 0 correctly (0 is a valid remaining quantity)
+                  const remainingQty = dist.remaining_quantity ?? (dist.quantity_distributed - distributedQty);
                   const progressPercent = dist.quantity_distributed > 0 
                     ? (distributedQty / dist.quantity_distributed) * 100 
                     : 0;
@@ -623,7 +636,7 @@ const AssociationInventory: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Remaining Inventory</p>
                   <p className="font-semibold text-emerald-600 text-lg">
-                    {(selectedDistribution.remaining_quantity || 0).toLocaleString()}
+                    {(selectedDistribution.remaining_quantity ?? 0).toLocaleString()}
                   </p>
                 </div>
                 <div>
@@ -789,6 +802,118 @@ const AssociationInventory: React.FC = () => {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     placeholder="Additional notes (optional)"
                   />
+                </div>
+
+                {/* Photo Upload Section */}
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-emerald-600" />
+                    Seedling Photos (Optional)
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Seedling Photo */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Seedling Photo</label>
+                      <div className="relative">
+                        {distributeForm.seedling_photo ? (
+                          <div className="relative group">
+                            <img 
+                              src={distributeForm.seedling_photo} 
+                              alt="Seedling" 
+                              className="w-full h-32 object-cover rounded-lg border-2 border-emerald-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setDistributeForm(prev => ({ ...prev, seedling_photo: '' }))}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all">
+                            <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                            <span className="text-xs text-gray-500">Upload Photo</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => handlePhotoChange(e, 'seedling_photo')}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Packaging Photo */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Packaging Photo</label>
+                      <div className="relative">
+                        {distributeForm.packaging_photo ? (
+                          <div className="relative group">
+                            <img 
+                              src={distributeForm.packaging_photo} 
+                              alt="Packaging" 
+                              className="w-full h-32 object-cover rounded-lg border-2 border-emerald-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setDistributeForm(prev => ({ ...prev, packaging_photo: '' }))}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all">
+                            <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                            <span className="text-xs text-gray-500">Upload Photo</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => handlePhotoChange(e, 'packaging_photo')}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quality Photo */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Quality Photo</label>
+                      <div className="relative">
+                        {distributeForm.quality_photo ? (
+                          <div className="relative group">
+                            <img 
+                              src={distributeForm.quality_photo} 
+                              alt="Quality" 
+                              className="w-full h-32 object-cover rounded-lg border-2 border-emerald-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setDistributeForm(prev => ({ ...prev, quality_photo: '' }))}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all">
+                            <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                            <span className="text-xs text-gray-500">Upload Photo</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => handlePhotoChange(e, 'quality_photo')}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">💡 Tip: Upload photos to help farmers identify the seedlings</p>
                 </div>
               </div>
 
