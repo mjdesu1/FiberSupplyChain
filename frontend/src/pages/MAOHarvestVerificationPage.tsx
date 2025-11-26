@@ -912,13 +912,13 @@ export default function MAOHarvestVerificationPage() {
                     )}
                     {selectedHarvest.planting_material_source && (
                       <div>
-                        <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Planting Material Source</p>
+                        <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Planting Method</p>
                         <p className="font-semibold text-gray-900">{selectedHarvest.planting_material_source}</p>
                       </div>
                     )}
                     {selectedHarvest.planting_spacing && (
                       <div>
-                        <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Planting Spacing</p>
+                        <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Location</p>
                         <p className="font-semibold text-gray-900">{selectedHarvest.planting_spacing}</p>
                       </div>
                     )}

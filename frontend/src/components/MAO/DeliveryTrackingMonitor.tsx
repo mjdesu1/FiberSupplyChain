@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Truck, Package, CheckCircle, XCircle, AlertCircle, Calendar, MapPin, User,
-  Phone, DollarSign, Filter, Download, Search, Eye, Clock, Award, Leaf
+  Truck, Package, CheckCircle, XCircle, User,
+  DollarSign, Download, Search, Eye, Leaf, Award
 } from 'lucide-react';
 
 interface Delivery {
@@ -29,6 +29,7 @@ interface Delivery {
     business_name: string;
     contact_number: string;
     business_address: string;
+    profile_photo?: string;
   };
   farmers?: {
     full_name: string;
@@ -45,6 +46,8 @@ const DeliveryTrackingMonitor: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   useEffect(() => {
     fetchDeliveries();
@@ -64,16 +67,6 @@ const DeliveryTrackingMonitor: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusIcon = (status: string) => {
-    const icons: { [key: string]: JSX.Element } = {
-      'In Transit': <Truck className="text-purple-500" size={20} />,
-      'Delivered': <Package className="text-green-500" size={20} />,
-      'Completed': <CheckCircle className="text-emerald-500" size={20} />,
-      'Cancelled': <XCircle className="text-red-500" size={20} />
-    };
-    return icons[status] || <AlertCircle className="text-gray-500" size={20} />;
   };
 
   const getStatusColor = (status: string) => {
@@ -114,71 +107,24 @@ const DeliveryTrackingMonitor: React.FC = () => {
     return matchesSearch;
   });
 
+  // Pagination
+  const totalEntries = filteredDeliveries.length;
+  const totalPages = Math.ceil(totalEntries / entriesPerPage);
+  const startIndex = (currentPage - 1) * entriesPerPage;
+  const endIndex = startIndex + entriesPerPage;
+  const paginatedDeliveries = filteredDeliveries.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery]);
+
   const stats = {
     total: deliveries.length,
     in_transit: deliveries.filter(d => d.status === 'In Transit').length,
     delivered: deliveries.filter(d => d.status === 'Delivered').length,
-    completed: deliveries.filter(d => d.status === 'Completed').length,
-    cancelled: deliveries.filter(d => d.status === 'Cancelled').length,
-    total_fiber_kg: deliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0),
-    total_value: deliveries.filter(d => d.status === 'Completed').reduce((sum, d) => sum + parseFloat(d.total_amount.toString()), 0)
+    total_fiber_kg: deliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0)
   };
-
-  // Calculate monthly fiber delivered
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  
-  const monthlyFiberData = Array.from({ length: 12 }, (_, i) => {
-    const monthDeliveries = deliveries.filter(d => {
-      const deliveryDate = new Date(d.delivery_date);
-      return deliveryDate.getMonth() === i && deliveryDate.getFullYear() === currentYear;
-    });
-    return monthDeliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0);
-  });
-
-  const thisMonthFiber = monthlyFiberData[currentMonth];
-  
-  // Calculate yearly fiber delivered
-  const yearlyFiberData = Array.from({ length: 5 }, (_, i) => {
-    const year = currentYear - 4 + i;
-    const yearDeliveries = deliveries.filter(d => {
-      const deliveryDate = new Date(d.delivery_date);
-      return deliveryDate.getFullYear() === year;
-    });
-    return {
-      year,
-      fiber: yearDeliveries.reduce((sum, d) => sum + parseFloat(d.quantity_kg.toString()), 0)
-    };
-  });
-
-  const thisYearFiber = yearlyFiberData.find(y => y.year === currentYear)?.fiber || 0;
-
-  // Pie chart data (excluding pending, only active statuses)
-  const pieChartData = [
-    { label: 'In Transit', value: stats.in_transit, color: '#a855f7' },
-    { label: 'Delivered', value: stats.delivered, color: '#22c55e' },
-    { label: 'Completed', value: stats.completed, color: '#10b981' },
-    { label: 'Cancelled', value: stats.cancelled, color: '#ef4444' }
-  ].filter(item => item.value > 0);
-
-  const totalForPie = pieChartData.reduce((sum, item) => sum + item.value, 0);
-  
-  // Calculate pie chart segments
-  let currentAngle = -90; // Start from top
-  const pieSegments = pieChartData.map(item => {
-    const percentage = (item.value / totalForPie) * 100;
-    const angle = (percentage / 100) * 360;
-    const segment = {
-      ...item,
-      percentage,
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle
-    };
-    currentAngle += angle;
-    return segment;
-  });
-
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const downloadCSV = () => {
     const headers = ['Delivery ID', 'Farmer', 'Buyer', 'Variety', 'Quantity (kg)', 'Grade', 'Status', 'Delivery Date', 'Location', 'Payment Status'];
@@ -264,137 +210,234 @@ const DeliveryTrackingMonitor: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+      {/* Enhanced Filters & Search Section */}
+      <div className="bg-gradient-to-r from-blue-50 via-emerald-50 to-purple-50 border-2 border-blue-200 rounded-3xl p-6 mb-8 shadow-lg">
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          {/* Status Filter Buttons - Left Side */}
           <div className="flex gap-2 flex-wrap">
             {['all', 'In Transit', 'Delivered', 'Completed', 'Cancelled'].map(status => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  statusFilter === status ? 'bg-emerald-500 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                className={`px-5 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-md border-2 ${
+                  statusFilter === status 
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg scale-105' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg'
                 }`}
               >
                 {status === 'all' ? 'All Deliveries' : status}
               </button>
             ))}
           </div>
-          <div className="flex gap-2 w-full lg:w-auto">
-            <div className="relative flex-1 lg:w-64">
-              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          
+          {/* Search & Export - Right Side */}
+          <div className="flex gap-3 w-full lg:w-auto">
+            <div className="relative flex-1 lg:w-80">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search farmer, buyer, variety, location..."
+                placeholder="Search farmers, buyers, variety, location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200 placeholder:text-gray-500 text-gray-800 font-medium shadow-md"
               />
             </div>
-            <button onClick={downloadCSV} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
-              <Download size={18} />
+            
+            <button 
+              onClick={downloadCSV} 
+              className="flex items-center px-6 py-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl hover:from-blue-500 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-2 border-blue-300 whitespace-nowrap"
+            >
+              <Download className="w-5 h-5 mr-2" />
               Export CSV
             </button>
           </div>
         </div>
       </div>
 
-      {/* Deliveries List */}
-      <div className="space-y-4">
-        {filteredDeliveries.map(delivery => (
-          <div key={delivery.delivery_id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-6 border-b">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-emerald-100 rounded-xl">{getStatusIcon(delivery.status)}</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{delivery.buyers?.business_name || 'Buyer'}</h3>
-                    <p className="text-sm text-gray-600">{delivery.variety} - {delivery.grade}</p>
-                    {delivery.farmers && (
-                      <p className="text-sm text-emerald-600 font-medium mt-1">
-                        👨‍🌾 Farmer: {delivery.farmers.full_name}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 font-mono mt-1">ID: {delivery.delivery_id}</p>
+      {/* Deliveries List - Sales Management Style */}
+      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-blue-100 via-emerald-100 to-purple-100">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Buyer/Farmer
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(delivery.status)}`}>{delivery.status}</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(delivery.payment_status)}`}>{delivery.payment_status}</span>
-                </div>
-              </div>
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">Delivery Progress</span>
-                  <span className="text-sm font-bold text-emerald-600">{getStatusProgress(delivery.status)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full transition-all duration-500" style={{ width: `${getStatusProgress(delivery.status)}%` }}></div>
-                </div>
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Variety & Grade</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Quantity
+                  </div>
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Progress</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-indigo-100">
+              {paginatedDeliveries.map((delivery, index) => (
+                <tr 
+                  key={delivery.delivery_id} 
+                  className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${
+                    index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                  }`}
+                >
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        {delivery.buyers?.profile_photo ? (
+                          <img 
+                            src={delivery.buyers.profile_photo} 
+                            alt={delivery.buyers.business_name}
+                            className="w-12 h-12 rounded-full object-cover shadow-lg border-2 border-white"
+                            onError={(e) => {
+                              // Fallback to gradient avatar if image fails to load
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                              const sibling = target.nextElementSibling as HTMLDivElement;
+                              if (sibling) sibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div 
+                          className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-white"
+                          style={{ display: delivery.buyers?.profile_photo ? 'none' : 'flex' }}
+                        >
+                          {delivery.buyers?.business_name?.charAt(0) || 'B'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-blue-900 text-sm">{delivery.buyers?.business_name || 'Buyer'}</div>
+                        {delivery.farmers && (
+                          <div className="text-emerald-600 text-xs font-medium">👨‍🌾 {delivery.farmers.full_name}</div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">{delivery.variety}</div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1">
+                        <Award size={12} className="text-amber-500" />
+                        {delivery.grade}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <div className="text-sm font-semibold text-gray-900">{delivery.quantity_kg} kg</div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <div className="text-sm font-semibold text-gray-900">{new Date(delivery.delivery_date).toLocaleDateString()}</div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {delivery.status === 'In Transit' && <Truck className="w-4 h-4 text-purple-500" />}
+                      {delivery.status === 'Delivered' && <Package className="w-4 h-4 text-green-500" />}
+                      {delivery.status === 'Completed' && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                      {delivery.status === 'Cancelled' && <XCircle className="w-4 h-4 text-red-500" />}
+                      <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full shadow-md ${getStatusColor(delivery.status)}`}>
+                        {delivery.status}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2 w-20 overflow-hidden">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-500 ${
+                            getStatusProgress(delivery.status) === 100 
+                              ? 'bg-gradient-to-r from-emerald-500 to-green-600' 
+                              : getStatusProgress(delivery.status) >= 50
+                              ? 'bg-gradient-to-r from-blue-500 to-emerald-500'
+                              : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                          }`}
+                          style={{ width: `${getStatusProgress(delivery.status)}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-bold text-gray-700">{getStatusProgress(delivery.status)}%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <button 
+                      onClick={() => { setSelectedDelivery(delivery); setShowDetailsModal(true); }}
+                      className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
+                      title="View Details"
+                    >
+                      <Eye size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer - Sales Management Style */}
+        <div className="p-6 border-t border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Items per page selector */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Show entries:</span>
+              <div className="flex gap-2">
+                {[10, 20, 30].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => {
+                      setEntriesPerPage(size);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                      entriesPerPage === size
+                        ? 'bg-indigo-500 text-white shadow-lg'
+                        : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-indigo-50 border border-gray-200'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="text-gray-400" size={16} />
-                  <div>
-                    <p className="text-gray-500 text-xs">Delivery Date</p>
-                    <p className="text-gray-700 font-medium">{new Date(delivery.delivery_date).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Leaf className="text-gray-400" size={16} />
-                  <div>
-                    <p className="text-gray-500 text-xs">Variety</p>
-                    <p className="text-gray-700 font-medium">{delivery.variety}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Package className="text-gray-400" size={16} />
-                  <div>
-                    <p className="text-gray-500 text-xs">Fiber (kg)</p>
-                    <p className="text-gray-700 font-medium">{delivery.quantity_kg} kg</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Award className="text-gray-400" size={16} />
-                  <div>
-                    <p className="text-gray-500 text-xs">Grade</p>
-                    <p className="text-gray-700 font-medium">{delivery.grade}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="text-gray-400" size={16} />
-                  <div>
-                    <p className="text-gray-500 text-xs">Method</p>
-                    <p className="text-gray-700 font-medium">{delivery.delivery_method}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <MapPin size={16} />
-                    <span>{delivery.delivery_location}</span>
-                  </div>
-                  {delivery.total_amount > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign size={16} />
-                      <span className="font-semibold">₱{delivery.total_amount.toLocaleString()}</span>
-                    </div>
-                  )}
-                </div>
-                <button onClick={() => { setSelectedDelivery(delivery); setShowDetailsModal(true); }} className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2">
-                  <Eye size={16} />
-                  View Details
+
+            {/* Page info and navigation */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                Showing {totalEntries === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                    currentPage === totalPages || totalPages === 0
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  Next
                 </button>
               </div>
             </div>
           </div>
-        ))}
+        </div>
       </div>
 
-      {filteredDeliveries.length === 0 && (
+      {totalEntries === 0 && (
         <div className="bg-white rounded-xl shadow-sm p-12 text-center">
           <Truck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 mb-4">No deliveries found</p>

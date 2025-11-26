@@ -9,6 +9,13 @@ interface FarmerProfile {
   association_name: string;
 }
 
+interface PlantedSeedling {
+  variety: string;
+  planting_date: string;
+  planting_location: string;
+  planting_notes: string;
+}
+
 interface HarvestFormData {
   // Farm Location (optional)
   farm_coordinates: string;
@@ -53,6 +60,7 @@ interface HarvestFormData {
 export default function HarvestSubmissionPage() {
   const [loading, setLoading] = useState(false);
   const [farmerProfile, setFarmerProfile] = useState<FarmerProfile | null>(null);
+  const [plantedSeedlings, setPlantedSeedlings] = useState<PlantedSeedling[]>([]);
   const [formData, setFormData] = useState<HarvestFormData>({
     farm_coordinates: '',
     landmark: '',
@@ -87,7 +95,38 @@ export default function HarvestSubmissionPage() {
 
   useEffect(() => {
     fetchFarmerProfile();
+    fetchPlantedSeedlings();
   }, []);
+
+  const fetchPlantedSeedlings = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch('http://localhost:3001/api/seedling-distribution/farmer/planted', {
+        headers: getAuthHeader()
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPlantedSeedlings(data.seedlings || []);
+        
+        // Auto-fill from most recent planted seedling
+        if (data.seedlings && data.seedlings.length > 0) {
+          const latest = data.seedlings[0];
+          setFormData(prev => ({
+            ...prev,
+            abaca_variety: latest.variety || '',
+            planting_date: latest.planting_date ? new Date(latest.planting_date).toISOString().split('T')[0] : '',
+            planting_material_source: latest.planting_notes || '',
+            planting_spacing: latest.planting_location || ''
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching planted seedlings:', error);
+    }
+  };
 
   const fetchFarmerProfile = async () => {
     try {
@@ -316,27 +355,24 @@ export default function HarvestSubmissionPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Planting Material Source <span className="text-red-500">*</span>
+                    Planting Method <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="planting_material_source"
                     required
+                    placeholder="e.g., Tissue Culture, Manual planting"
                     value={formData.planting_material_source}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  >
-                    <option value="Tissue Culture">Tissue Culture</option>
-                    <option value="Sucker">Sucker</option>
-                    <option value="Corm">Corm</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Planting Spacing</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                   <input
                     type="text"
                     name="planting_spacing"
-                    placeholder="e.g., 2m x 2m"
+                    placeholder="e.g., Farm A, Plot 1"
                     value={formData.planting_spacing}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"

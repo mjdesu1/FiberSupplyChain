@@ -138,7 +138,7 @@ const PlantingMonitor: React.FC = () => {
       return;
     }
 
-    const headers = ['Variety', 'Farmer', 'Association', 'Quantity', 'Planting Date', 'Location', 'Notes'];
+    const headers = ['Variety', 'Farmer', 'Association', 'Quantity', 'Planting Date', 'Location', 'Planting Method'];
     
     const rows = filteredSeedlings.map(s => [
       s.variety,
@@ -433,7 +433,7 @@ const PlantingMonitor: React.FC = () => {
                   )}
                   {selectedSeedling.planting_notes && (
                     <div className="col-span-2">
-                      <p className="text-sm text-gray-600">Farmer's Notes</p>
+                      <p className="text-sm text-gray-600">Planting Method</p>
                       <p className="font-medium text-gray-900">{selectedSeedling.planting_notes}</p>
                     </div>
                   )}

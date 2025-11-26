@@ -3,7 +3,7 @@
  * Shows detailed planted records from farmers in table format
  */
 import React, { useEffect, useState } from 'react';
-import { Sprout, Calendar, MapPin, User, Search, Filter, Camera, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sprout, Calendar, MapPin, User, Search, Filter, Camera, Eye, X } from 'lucide-react';
 
 interface PlantedSeedling {
   distribution_id: string;
@@ -457,7 +457,7 @@ const PlantedSeedlings: React.FC = () => {
 
                   {selectedSeedling.planting_notes && (
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Notes</p>
+                      <p className="text-sm text-gray-600 mb-1">Planting Method</p>
                       <p className="font-semibold text-gray-900">{selectedSeedling.planting_notes}</p>
                     </div>
                   )}

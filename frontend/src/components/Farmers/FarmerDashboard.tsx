@@ -763,7 +763,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                                    seedling.quality_photo;
                                   
                                   // Debug log for first render
-                                  if (seedling.distribution_id && !window.photoDebugLogged) {
+                                  if (seedling.distribution_id && !(window as any).photoDebugLogged) {
                                     console.log('🖼️ Photo check for seedling:', {
                                       id: seedling.distribution_id,
                                       seedling_photo: seedling.seedling_photo ? 'exists' : 'null',
@@ -771,7 +771,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                                       quality_photo: seedling.quality_photo ? 'exists' : 'null',
                                       photoUrl: photoUrl ? photoUrl.substring(0, 50) + '...' : 'none'
                                     });
-                                    window.photoDebugLogged = true;
+                                    (window as any).photoDebugLogged = true;
                                   }
                                   
                                   if (photoUrl && photoUrl.trim() !== '') {
@@ -1331,13 +1331,13 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Planting Method</label>
                     <textarea
                       rows={3}
                       value={plantingData.planting_notes}
                       onChange={(e) => setPlantingData({ ...plantingData, planting_notes: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Add any notes about the planting..."
+                      placeholder="Describe the planting method used..."
                     />
                   </div>
 
@@ -1450,10 +1450,12 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                     <p className="text-sm text-gray-600">Date Distributed</p>
                     <p className="font-medium text-gray-900">{new Date(selectedSeedling.date_distributed).toLocaleDateString()}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Source/Supplier</p>
-                    <p className="font-medium text-gray-900">{selectedSeedling.source_supplier || 'N/A'}</p>
-                  </div>
+                  {selectedSeedling.source_supplier && (
+                    <div>
+                      <p className="text-sm text-gray-600">Source/Supplier</p>
+                      <p className="font-medium text-gray-900">{selectedSeedling.source_supplier}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm text-gray-600">Status</p>
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
@@ -1538,15 +1540,9 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
                           <p className="font-medium text-green-900">{selectedSeedling.planting_location}</p>
                         </div>
                       )}
-                      {selectedSeedling.planted_at && (
-                        <div>
-                          <p className="text-sm text-green-700">Marked as Planted</p>
-                          <p className="font-medium text-green-900">{new Date(selectedSeedling.planted_at).toLocaleDateString()}</p>
-                        </div>
-                      )}
                       {selectedSeedling.planting_notes && (
                         <div className="col-span-2">
-                          <p className="text-sm text-green-700">Your Notes</p>
+                          <p className="text-sm text-green-700">Planting Method</p>
                           <p className="font-medium text-green-900">{selectedSeedling.planting_notes}</p>
                         </div>
                       )}
