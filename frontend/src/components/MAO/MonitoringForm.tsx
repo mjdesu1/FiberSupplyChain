@@ -35,6 +35,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isFinalVisit, setIsFinalVisit] = useState(false);
 
   const [formData, setFormData] = useState<MonitoringFormData>({
     dateOfVisit: initialData?.dateOfVisit || new Date().toISOString().split('T')[0],
@@ -84,7 +85,7 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
     if (farmer) {
       // Fetch full farmer details from database
       try {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('token');
         const response = await fetch(`http://localhost:3001/api/mao/farmers/${farmer.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -148,8 +149,23 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
     setErrors([]);
     setSuccessMessage('');
 
+    // Prepare submission data
+    const submissionData = { ...formData };
+
+    // Handle Final Visit logic
+    if (isFinalVisit) {
+      // Mark as Completed
+      (submissionData as any).status = 'Completed';
+      // Clear next monitoring date
+      submissionData.nextMonitoringDate = '';
+      console.log('✅ Final Visit - Status set to Completed, Next Visit cleared');
+    } else {
+      // Regular visit - default to Ongoing
+      (submissionData as any).status = 'Ongoing';
+    }
+
     // Validate form
-    const validation = validateMonitoringForm(formData);
+    const validation = validateMonitoringForm(submissionData);
     if (!validation.valid) {
       setErrors(validation.errors);
       return;
@@ -157,13 +173,26 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
 
     setLoading(true);
     try {
-      await onSubmit(formData);
-      setSuccessMessage('Monitoring record saved successfully!');
+      console.log('📤 Submitting monitoring data:', submissionData);
+      console.log('🔍 Form validation:');
+      console.log('  - dateOfVisit:', submissionData.dateOfVisit);
+      console.log('  - monitoredBy:', submissionData.monitoredBy);
+      console.log('  - farmerName:', submissionData.farmerName);
+      console.log('  - farmCondition:', submissionData.farmCondition);
+      console.log('  - growthStage:', submissionData.growthStage);
+      console.log('  - actionsTaken:', submissionData.actionsTaken);
+      console.log('  - recommendations:', submissionData.recommendations);
+      console.log('  - status:', (submissionData as any).status);
+      await onSubmit(submissionData);
+      setSuccessMessage(isFinalVisit ? 
+        '✅ Final monitoring visit saved! Status marked as Completed.' : 
+        'Monitoring record saved successfully!');
       setTimeout(() => {
         onCancel();
       }, 1500);
-    } catch (error) {
-      setErrors(['Failed to save monitoring record. Please try again.']);
+    } catch (error: any) {
+      console.error('❌ Error saving monitoring:', error);
+      setErrors([error.message || 'Failed to save monitoring record. Please try again.']);
     } finally {
       setLoading(false);
     }
@@ -511,29 +540,74 @@ const MonitoringForm: React.FC<MonitoringFormProps> = ({
 
         {/* Section 5: Next Monitoring Schedule */}
         <div className="bg-indigo-50 rounded-xl p-6 space-y-4 border-2 border-indigo-200">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center space-x-2">
-            <Calendar className="w-5 h-5 text-indigo-600" />
-            <span>Schedule Next Monitoring Visit</span>
+          <h3 className="text-lg font-bold text-emerald-700 flex items-center gap-2 mb-2">
+            <Calendar className="w-5 h-5" />
+            Next Monitoring Schedule
           </h3>
           <p className="text-sm text-gray-600">Set the date for the next field monitoring visit</p>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Next Monitoring Date <span className="text-red-500">*</span>
+          {/* Final Visit Checkbox */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-4">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={isFinalVisit}
+                onChange={(e) => {
+                  setIsFinalVisit(e.target.checked);
+                  if (e.target.checked) {
+                    // Clear next monitoring date when final visit is checked
+                    setFormData(prev => ({ ...prev, nextMonitoringDate: '' }));
+                  }
+                }}
+                className="mt-1 w-5 h-5 text-green-600 border-green-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="font-bold text-green-800">This is the Final Visit</span>
+                </div>
+                <p className="text-sm text-green-700 mt-1">
+                  Check this if the farm has reached stable condition and no more monitoring is needed. 
+                  The status will be automatically marked as <strong>Completed</strong> and no next visit will be scheduled.
+                </p>
+              </div>
             </label>
-            <input
-              type="date"
-              name="nextMonitoringDate"
-              value={formData.nextMonitoringDate}
-              onChange={handleInputChange}
-              min={new Date(new Date(formData.dateOfVisit).getTime() + 86400000).toISOString().split('T')[0]}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-              required
-            />
-            <p className="text-xs text-gray-600 mt-2">
-              Recommended: Schedule next visit within 7-14 days for optimal monitoring
-            </p>
           </div>
+
+          {/* Next Monitoring Date - Only show if NOT final visit */}
+          {!isFinalVisit && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Next Monitoring Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="nextMonitoringDate"
+                value={formData.nextMonitoringDate}
+                onChange={handleInputChange}
+                min={new Date(new Date(formData.dateOfVisit).getTime() + 86400000).toISOString().split('T')[0]}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                required
+              />
+              <p className="text-xs text-gray-600 mt-2">
+                Recommended: Schedule next visit within 7-14 days for optimal monitoring
+              </p>
+            </div>
+          )}
+
+          {/* Final Visit Confirmation Message */}
+          {isFinalVisit && (
+            <div className="bg-green-100 border border-green-300 rounded-lg p-4 flex items-start gap-3">
+              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-green-800">Final Visit Confirmed</p>
+                <p className="text-sm text-green-700 mt-1">
+                  This monitoring record will be marked as <strong>Completed</strong>. 
+                  The farm will no longer appear in Upcoming or Overdue lists.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}

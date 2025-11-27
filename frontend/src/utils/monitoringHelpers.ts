@@ -105,8 +105,12 @@ export const getGrowthStageColor = (stage: string): string => {
 
 /**
  * Calculate monitoring statistics
+ * Uses latest record per farmer for upcoming/overdue counts
  */
 export const calculateStats = (records: MonitoringRecord[]): MonitoringStats => {
+  // Get latest Ongoing records per farmer for accurate upcoming/overdue counts
+  const latestRecords = getLatestRecordPerFarmer(records);
+  
   const stats: MonitoringStats = {
     totalMonitoring: records.length,
     healthyFarms: 0,
@@ -116,16 +120,16 @@ export const calculateStats = (records: MonitoringRecord[]): MonitoringStats => 
     overdueMonitoring: 0
   };
 
-  records.forEach(record => {
-    // Count by condition
+  // Count conditions from latest records only
+  latestRecords.forEach(record => {
     if (record.farmCondition === 'Healthy') stats.healthyFarms++;
     if (record.farmCondition === 'Needs Support') stats.needsSupport++;
     if (record.farmCondition === 'Damaged') stats.damagedFarms++;
-
-    // Count upcoming and overdue
-    if (isUpcoming(record.nextMonitoringDate)) stats.upcomingMonitoring++;
-    if (isOverdue(record.nextMonitoringDate)) stats.overdueMonitoring++;
   });
+
+  // Count upcoming and overdue from latest records only
+  stats.upcomingMonitoring = getUpcomingMonitoring(records).length;
+  stats.overdueMonitoring = getOverdueMonitoring(records).length;
 
   return stats;
 };
@@ -168,10 +172,34 @@ export const sortByDate = (records: MonitoringRecord[]): MonitoringRecord[] => {
 };
 
 /**
+ * Get latest monitoring record per farmer
+ * Returns only the most recent record for each farmer
+ */
+export const getLatestRecordPerFarmer = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  const farmerMap = new Map<string, MonitoringRecord>();
+  
+  records.forEach(record => {
+    // Only consider Ongoing records
+    if ((record as any).status !== 'Ongoing') return;
+    
+    const existing = farmerMap.get(record.farmerId);
+    if (!existing || new Date(record.dateOfVisit) > new Date(existing.dateOfVisit)) {
+      farmerMap.set(record.farmerId, record);
+    }
+  });
+  
+  return Array.from(farmerMap.values());
+};
+
+/**
  * Get upcoming monitoring records
+ * Only shows the latest Ongoing record per farmer
  */
 export const getUpcomingMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
-  return records
+  // Get only latest Ongoing record per farmer
+  const latestRecords = getLatestRecordPerFarmer(records);
+  
+  return latestRecords
     .filter(record => isUpcoming(record.nextMonitoringDate))
     .sort((a, b) => 
       new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
@@ -180,9 +208,13 @@ export const getUpcomingMonitoring = (records: MonitoringRecord[]): MonitoringRe
 
 /**
  * Get overdue monitoring records
+ * Only shows the latest Ongoing record per farmer that is overdue
  */
 export const getOverdueMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
-  return records
+  // Get only latest Ongoing record per farmer
+  const latestRecords = getLatestRecordPerFarmer(records);
+  
+  return latestRecords
     .filter(record => isOverdue(record.nextMonitoringDate))
     .sort((a, b) => 
       new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
@@ -206,9 +238,13 @@ export const validateMonitoringForm = (data: any): { valid: boolean; errors: str
   if (!data.recommendations || data.recommendations.trim() === '') {
     errors.push('Recommendations is required');
   }
-  if (!data.nextMonitoringDate) errors.push('Next monitoring date is required');
+  
+  // Only require next monitoring date if status is not Completed (i.e., not a final visit)
+  if (data.status !== 'Completed' && !data.nextMonitoringDate) {
+    errors.push('Next monitoring date is required');
+  }
 
-  // Validate date logic
+  // Validate date logic only if next monitoring date is provided
   if (data.dateOfVisit && data.nextMonitoringDate) {
     const visitDate = new Date(data.dateOfVisit);
     const nextDate = new Date(data.nextMonitoringDate);

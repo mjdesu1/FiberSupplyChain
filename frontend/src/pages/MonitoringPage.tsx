@@ -47,7 +47,7 @@ const MonitoringPage: React.FC = () => {
    */
   const loadFarmers = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/api/mao/farmers', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -111,7 +111,7 @@ const MonitoringPage: React.FC = () => {
    */
   const fetchFreshData = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/api/mao/monitoring', {
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -125,9 +125,11 @@ const MonitoringPage: React.FC = () => {
 
       const data = await response.json();
       console.log('Monitoring records loaded:', data);
+      console.log('First record status:', data.data?.[0]?.status || data.records?.[0]?.status);
       
       // Map API response to MonitoringRecord format
-      const mappedRecords = data.records?.map((record: any) => ({
+      // Backend returns { success: true, data: [...] }
+      const mappedRecords = (data.data || data.records || []).map((record: any) => ({
         monitoringId: record.monitoring_id,
         dateOfVisit: record.date_of_visit,
         monitoredBy: record.monitored_by,
@@ -147,6 +149,7 @@ const MonitoringPage: React.FC = () => {
         estimatedYield: record.estimated_yield,
         remarks: record.remarks,
         photoUrls: record.photo_urls,
+        status: record.status || 'Ongoing',
         createdAt: record.created_at,
         updatedAt: record.updated_at
       })) || [];
@@ -168,7 +171,10 @@ const MonitoringPage: React.FC = () => {
    */
   const handleAddRecord = async (data: any) => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
+      
+      console.log('📤 Adding new monitoring record with data:', data);
+      
       const newRecordData = {
         monitoringId: generateMonitoringId(),
         dateOfVisit: data.dateOfVisit,
@@ -184,12 +190,27 @@ const MonitoringPage: React.FC = () => {
         otherIssues: data.otherIssues,
         actionsTaken: data.actionsTaken,
         recommendations: data.recommendations,
-        nextMonitoringDate: data.nextMonitoringDate,
+        nextMonitoringDate: data.nextMonitoringDate || null,
         weatherCondition: data.weatherCondition,
         estimatedYield: data.estimatedYield,
         remarks: data.remarks,
-        photoUrls: data.photoUrls || []
+        photoUrls: data.photoUrls || [],
+        status: data.status || 'Ongoing'
       };
+      
+      console.log('📦 Sending to backend:', newRecordData);
+      console.log('🔍 Required fields check:');
+      console.log('  - monitoringId:', newRecordData.monitoringId);
+      console.log('  - dateOfVisit:', newRecordData.dateOfVisit);
+      console.log('  - monitoredBy:', newRecordData.monitoredBy);
+      console.log('  - farmerId:', newRecordData.farmerId);
+      console.log('  - farmerName:', newRecordData.farmerName);
+      console.log('  - farmCondition:', newRecordData.farmCondition);
+      console.log('  - growthStage:', newRecordData.growthStage);
+      console.log('  - actionsTaken:', newRecordData.actionsTaken);
+      console.log('  - recommendations:', newRecordData.recommendations);
+      console.log('  - status:', newRecordData.status);
+      console.log('  - nextMonitoringDate:', newRecordData.nextMonitoringDate);
 
       const response = await fetch('http://localhost:3001/api/mao/monitoring', {
         method: 'POST',
@@ -202,69 +223,82 @@ const MonitoringPage: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create monitoring record');
+        console.error('❌ Backend error:', errorData);
+        throw new Error(errorData.message || errorData.error || 'Failed to create monitoring record');
       }
 
       const result = await response.json();
-      console.log('New monitoring record added:', result);
+      console.log('✅ New monitoring record added:', result);
 
-      // Reload monitoring records to get fresh data (bypass cache)
+      // Clear cache and reload monitoring records
+      localStorage.removeItem('monitoring_records');
       await fetchFreshData();
-    } catch (err) {
-      console.error('Error adding monitoring record:', err);
-      throw new Error('Failed to add monitoring record');
+      
+      console.log('✨ Monitoring list refreshed!');
+      
+      return result.data;
+    } catch (err: any) {
+      console.error('❌ Error adding monitoring record:', err);
+      throw err; // Re-throw the original error with its message
     }
   };
 
   /**
    * Handle updating existing monitoring record
+   * This function properly updates the record and refreshes the UI
    */
   const handleUpdateRecord = async (id: string, data: any) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const updateData = {
-        dateOfVisit: data.dateOfVisit,
-        monitoredBy: data.monitoredBy,
-        monitoredByRole: data.monitoredByRole,
-        farmerId: data.farmerId,
-        farmerName: data.farmerName,
-        associationName: data.associationName,
-        farmLocation: data.farmLocation,
-        farmCondition: data.farmCondition,
-        growthStage: data.growthStage,
-        issuesObserved: data.issuesObserved || [],
-        otherIssues: data.otherIssues,
-        actionsTaken: data.actionsTaken,
-        recommendations: data.recommendations,
-        nextMonitoringDate: data.nextMonitoringDate,
-        weatherCondition: data.weatherCondition,
-        estimatedYield: data.estimatedYield,
-        remarks: data.remarks,
-        photoUrls: data.photoUrls || []
-      };
+    console.log('🔄 Starting update for monitoring ID:', id);
+    console.log('📦 Data to update:', data);
 
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Send the update request
       const response = await fetch(`http://localhost:3001/api/mao/monitoring/${id}`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
         },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(data)
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
+        if (response.status === 401) {
+          alert('⚠️ Your session has expired. Please logout and login again.');
+          throw new Error('Session expired - please login again');
+        }
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update monitoring record');
+        console.error('❌ Update failed:', errorData);
+        throw new Error(errorData.message || 'Failed to update monitoring record');
       }
 
       const result = await response.json();
-      console.log('Monitoring record updated:', result);
+      console.log('✅ Update successful!');
+      console.log('📊 Updated record:', result.data);
+      console.log('🎯 New status:', result.data?.status);
 
-      // Reload monitoring records to get fresh data (bypass cache)
+      // IMPORTANT: Clear cache and force fresh data fetch
+      localStorage.removeItem('monitoring_records');
+      
+      // Fetch fresh data from server
+      console.log('🔄 Fetching fresh data...');
       await fetchFreshData();
-    } catch (err) {
-      console.error('Error updating monitoring record:', err);
-      throw new Error('Failed to update monitoring record');
+      
+      console.log('✨ UI updated successfully!');
+      
+      return result.data;
+    } catch (err: any) {
+      console.error('❌ Error updating monitoring record:', err);
+      alert(`Failed to update: ${err.message}`);
+      throw err;
     }
   };
 
@@ -272,9 +306,15 @@ const MonitoringPage: React.FC = () => {
    * Handle deleting monitoring record
    */
   const handleDeleteRecord = async (id: string) => {
+    console.log('🗑️ Deleting monitoring record:', id);
+
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const response = await fetch(`http://localhost:3001/api/mao/monitoring/${id}`, {
         method: 'DELETE',
         headers: { 
@@ -283,18 +323,29 @@ const MonitoringPage: React.FC = () => {
         }
       });
 
+      console.log('📡 Delete response status:', response.status);
+
       if (!response.ok) {
+        if (response.status === 401) {
+          alert('⚠️ Your session has expired. Please logout and login again.');
+          throw new Error('Session expired - please login again');
+        }
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete monitoring record');
+        console.error('❌ Delete failed:', errorData);
+        throw new Error(errorData.message || 'Failed to delete monitoring record');
       }
 
-      console.log('Monitoring record deleted:', id);
+      console.log('✅ Monitoring record deleted successfully!');
 
-      // Reload monitoring records to get fresh data (bypass cache)
+      // Clear cache and reload monitoring records
+      localStorage.removeItem('monitoring_records');
       await fetchFreshData();
-    } catch (err) {
-      console.error('Error deleting monitoring record:', err);
-      throw new Error('Failed to delete monitoring record');
+      
+      console.log('✨ Data refreshed after deletion!');
+    } catch (err: any) {
+      console.error('❌ Error deleting monitoring record:', err);
+      alert(`Failed to delete: ${err.message}`);
+      throw err;
     }
   };
 

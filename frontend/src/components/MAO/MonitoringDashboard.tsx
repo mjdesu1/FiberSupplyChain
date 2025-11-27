@@ -14,8 +14,7 @@ import {
   Activity,
   X,
   User,
-  Leaf,
-  CheckCircle
+  Leaf
 } from 'lucide-react';
 import { MonitoringRecord, MonitoringFilters } from '../../types/monitoring';
 import {
@@ -54,7 +53,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<MonitoringFilters>({});
   const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed'>('all');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -75,6 +74,9 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
       filtered = getUpcomingMonitoring(filtered);
     } else if (activeTab === 'overdue') {
       filtered = getOverdueMonitoring(filtered);
+    } else if (activeTab === 'completed') {
+      filtered = filtered.filter(record => (record as any).status === 'Completed');
+      filtered = sortByDate(filtered);
     } else {
       filtered = sortByDate(filtered);
     }
@@ -109,7 +111,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
-      {/* Modern Stats Cards with Gradients - Matching User Management */}
+      {/* Modern Stats Cards with Gradients */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
         {/* Total Monitoring Card */}
         <div className="group relative bg-gradient-to-br from-slate-500 to-slate-700 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
@@ -132,7 +134,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
           <div className="relative">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <CheckCircle className="w-6 h-6 text-white" />
+                <Leaf className="w-6 h-6 text-white" />
               </div>
               <span className="px-2 py-1 bg-white/20 rounded-full text-xs text-white font-semibold">
                 Active
@@ -306,6 +308,24 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}
         </button>
+        <button
+          onClick={() => setActiveTab('completed')}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'completed'
+              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'completed' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
+          }`}>
+           
+          </div>
+          <span>Completed ({records.filter(r => (r as any).status === 'Completed').length})</span>
+          {activeTab === 'completed' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
       </div>
 
       {/* Compact Table with Pagination */}
@@ -377,6 +397,12 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Growth Stage</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4" />
+                      Status
+                    </div>
+                  </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Next Visit</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -412,17 +438,37 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                       <div className="text-sm font-medium text-gray-900">{record.growthStage}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-indigo-900">
-                        {formatDate(record.nextMonitoringDate)}
-                      </div>
-                      <div className="text-xs text-indigo-600">
-                        ({daysUntilMonitoring(record.nextMonitoringDate) >= 0 
-                          ? `in ${daysUntilMonitoring(record.nextMonitoringDate)} days`
-                          : `${Math.abs(daysUntilMonitoring(record.nextMonitoringDate))} days overdue`})
-                      </div>
+                      {(record as any).status === 'Completed' ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold shadow-md bg-green-100 text-green-800 border border-green-300">
+                          ✓ Completed
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold shadow-md bg-blue-100 text-blue-800 border border-blue-300">
+                          🔄 Ongoing
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {record.nextMonitoringDate ? (
+                        <>
+                          <div className="text-sm font-semibold text-indigo-900">
+                            {formatDate(record.nextMonitoringDate)}
+                          </div>
+                          <div className="text-xs text-indigo-600">
+                            ({daysUntilMonitoring(record.nextMonitoringDate) >= 0 
+                              ? `in ${daysUntilMonitoring(record.nextMonitoringDate)} days`
+                              : `${Math.abs(daysUntilMonitoring(record.nextMonitoringDate))} days overdue`})
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-gray-500 italic">
+                          No next visit
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
+                        {/* View Button - Always show */}
                         <button
                           onClick={() => setSelectedRecord(record)}
                           className="p-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 hover:shadow-md transition-all duration-200"
@@ -430,16 +476,31 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                         >
                           <Eye className="w-4 h-4" />
                         </button>
+                        
+                        {/* Edit Button - Only for Ongoing records */}
+                        {(record as any).status !== 'Completed' && (
+                          <button
+                            onClick={() => { setEditingRecord(record); setShowForm(true); }}
+                            className="p-2 bg-amber-100 text-amber-600 rounded-xl hover:bg-amber-200 hover:shadow-md transition-all duration-200"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
+                        
+                        {/* Delete Button - Always show */}
                         <button
-                          onClick={() => { setEditingRecord(record); setShowForm(true); }}
-                          className="p-2 bg-emerald-100 text-emerald-600 rounded-xl hover:bg-emerald-200 hover:shadow-md transition-all duration-200"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteRecord(record.monitoringId)}
-                          className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 hover:shadow-md transition-all duration-200"
+                          onClick={async () => {
+                            if (confirm('⚠️ Delete this monitoring record?\n\nThis action cannot be undone.')) {
+                              try {
+                                await onDeleteRecord(record.monitoringId);
+                                alert('✅ Monitoring record deleted successfully!');
+                              } catch (error) {
+                                console.error('Failed to delete:', error);
+                              }
+                            }
+                          }}
+                          className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 hover:shadow-md transition-all duration-200"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -622,7 +683,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               {/* Actions and Recommendations */}
               <div className="bg-purple-50 rounded-xl p-5 border-2 border-purple-200">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-2 text-purple-600" />
+                
                   Actions & Recommendations
                 </h3>
                 <div className="space-y-4">

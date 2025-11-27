@@ -247,15 +247,28 @@ export class MAOController {
         weatherCondition,
         estimatedYield,
         remarks,
-        photoUrls
+        photoUrls,
+        status
       } = req.body;
 
-      // Validate required fields
-      if (!monitoringId || !dateOfVisit || !monitoredBy || !farmerId || !farmerName || 
-          !farmCondition || !growthStage || !actionsTaken || !recommendations || !nextMonitoringDate) {
+      console.log('📥 Received monitoring data:', req.body);
+
+      // Validate required fields (farmerId is optional, nextMonitoringDate optional if status=Completed)
+      if (!monitoringId || !dateOfVisit || !monitoredBy || !farmerName || 
+          !farmCondition || !growthStage || !actionsTaken || !recommendations) {
+        console.error('❌ Missing required fields');
         res.status(400).json({ error: 'Missing required fields' });
         return;
       }
+
+      // Only require nextMonitoringDate if status is not Completed (Final Visit)
+      if (status !== 'Completed' && !nextMonitoringDate) {
+        console.error('❌ Next monitoring date required for ongoing monitoring');
+        res.status(400).json({ error: 'Next monitoring date is required for ongoing monitoring' });
+        return;
+      }
+
+      console.log('✅ Validation passed, inserting record...');
 
       const { data, error } = await supabase
         .from('monitoring_records')
@@ -264,7 +277,7 @@ export class MAOController {
           date_of_visit: dateOfVisit,
           monitored_by: monitoredBy,
           monitored_by_role: monitoredByRole,
-          farmer_id: farmerId,
+          farmer_id: farmerId || null,
           farmer_name: farmerName,
           association_name: associationName,
           farm_location: farmLocation,
@@ -274,11 +287,12 @@ export class MAOController {
           other_issues: otherIssues,
           actions_taken: actionsTaken,
           recommendations: recommendations,
-          next_monitoring_date: nextMonitoringDate,
+          next_monitoring_date: nextMonitoringDate || null,
           weather_condition: weatherCondition,
           estimated_yield: estimatedYield,
           remarks: remarks,
           photo_urls: photoUrls || [],
+          status: status || 'Ongoing',
           created_by: userId,
           updated_by: userId
         })

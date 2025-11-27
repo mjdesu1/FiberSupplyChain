@@ -400,7 +400,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-6">
+        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
@@ -572,12 +572,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
           {currentPage === 'seedlings' && (
             <>
-              {/* Sticky Header */}
-              <div className="sticky top-0 z-10 bg-gradient-to-r from-emerald-50 to-teal-50 -mx-6 px-6 py-4 mb-6 shadow-sm border-b border-emerald-100">
-                <h2 className="text-2xl font-bold text-gray-900">My Seedlings</h2>
-                <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.full_name || 'Farmer'}!</p>
-              </div>
-
               {/* Modern Stats Cards - UserManagement Style */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 mb-6">
 

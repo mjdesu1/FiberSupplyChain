@@ -230,10 +230,9 @@ export default function HarvestSubmissionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-3xl font-bold text-green-800 mb-6">Submit Harvest Record</h1>
+    <div>
+      <div className="max-w-4xl mx-auto">
+        <div>
 
           {/* Auto-filled Farmer Info */}
           {farmerProfile && (
@@ -266,10 +265,10 @@ export default function HarvestSubmissionPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Farm Location */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Farm Location</h2>
+              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Farm Location</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -282,7 +281,7 @@ export default function HarvestSubmissionPage() {
                     required
                     value={formData.area_hectares}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -295,7 +294,7 @@ export default function HarvestSubmissionPage() {
                     placeholder="e.g., 7.6298, 125.4737"
                     value={formData.farm_coordinates}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -305,7 +304,7 @@ export default function HarvestSubmissionPage() {
                     name="farm_name"
                     value={formData.farm_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -315,7 +314,7 @@ export default function HarvestSubmissionPage() {
                     name="landmark"
                     value={formData.landmark}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
@@ -323,7 +322,7 @@ export default function HarvestSubmissionPage() {
 
             {/* Planting Information */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Planting Information</h2>
+              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Planting Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -336,7 +335,7 @@ export default function HarvestSubmissionPage() {
                     placeholder="e.g., Maguindanao, Abuab, Tangongon, Laylay, etc."
                     value={formData.abaca_variety}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                   <p className="text-xs text-gray-500 mt-1">Common varieties: Maguindanao, Abuab, Tangongon, Laylay, Inosa, Linawaan</p>
                 </div>
@@ -350,7 +349,7 @@ export default function HarvestSubmissionPage() {
                     required
                     value={formData.planting_date}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -364,7 +363,7 @@ export default function HarvestSubmissionPage() {
                     placeholder="e.g., Tissue Culture, Manual planting"
                     value={formData.planting_material_source}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -375,7 +374,7 @@ export default function HarvestSubmissionPage() {
                     placeholder="e.g., Farm A, Plot 1"
                     value={formData.planting_spacing}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
@@ -383,7 +382,7 @@ export default function HarvestSubmissionPage() {
 
             {/* Harvest Details */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Harvest Details</h2>
+              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Harvest Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -395,7 +394,7 @@ export default function HarvestSubmissionPage() {
                     required
                     value={formData.harvest_date}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -407,7 +406,7 @@ export default function HarvestSubmissionPage() {
                     required
                     value={formData.harvest_method}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   >
                     <option value="Manual Tuxying + Hand Stripping">Manual Tuxying + Hand Stripping</option>
                     <option value="Mechanical Stripping">Mechanical Stripping</option>
@@ -422,7 +421,7 @@ export default function HarvestSubmissionPage() {
                     name="stalks_harvested"
                     value={formData.stalks_harvested}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -436,7 +435,7 @@ export default function HarvestSubmissionPage() {
                     required
                     value={formData.dry_fiber_output_kg}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -447,7 +446,7 @@ export default function HarvestSubmissionPage() {
                     step="0.01"
                     value={formData.wet_weight_kg}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -458,15 +457,15 @@ export default function HarvestSubmissionPage() {
                     step="0.01"
                     value={formData.yield_per_hectare_kg}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
             </section>
 
-            {/* Quality/Grading */}
+            {/* Quality & Grading */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Quality & Grading</h2>
+              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Quality & Grading</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Grade</label>
@@ -474,7 +473,7 @@ export default function HarvestSubmissionPage() {
                     name="fiber_grade"
                     value={formData.fiber_grade}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   >
                     <option value="Grade A">Grade A</option>
                     <option value="Grade B">Grade B</option>
@@ -490,7 +489,7 @@ export default function HarvestSubmissionPage() {
                     required
                     value={formData.moisture_status}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   >
                     <option value="Sun-dried">Sun-dried</option>
                     <option value="Semi-dried">Semi-dried</option>
@@ -505,7 +504,7 @@ export default function HarvestSubmissionPage() {
                     name="fiber_color"
                     value={formData.fiber_color}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
                 <div>
@@ -515,15 +514,15 @@ export default function HarvestSubmissionPage() {
                     name="bales_produced"
                     value={formData.bales_produced}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
             </section>
 
-            {/* Pest/Disease */}
+            {/* Pest & Disease Observations */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pest & Disease Observations</h2>
+              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Pest & Disease Observations</h2>
               <div className="space-y-4">
                 <div className="flex items-center">
                   <input
@@ -542,7 +541,7 @@ export default function HarvestSubmissionPage() {
                     value={formData.pests_description}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 )}
                 <div className="flex items-center">
@@ -562,7 +561,7 @@ export default function HarvestSubmissionPage() {
                     value={formData.diseases_description}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
                   />
                 )}
               </div>
@@ -582,20 +581,13 @@ export default function HarvestSubmissionPage() {
             </section>
 
             {/* Submit Button */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-4 border-t-2 border-gray-100">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 disabled:bg-gray-400 font-semibold"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 px-6 rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
               >
                 {loading ? 'Submitting...' : 'Submit Harvest'}
-              </button>
-              <button
-                type="button"
-                onClick={() => window.history.back()}
-                className="px-6 py-3 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
               </button>
             </div>
           </form>
