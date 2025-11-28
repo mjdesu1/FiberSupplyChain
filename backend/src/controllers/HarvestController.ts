@@ -414,7 +414,7 @@ export class HarvestController {
       const stats = {
         total_harvests: data.length,
         pending: data.filter(h => h.status === 'Pending Verification').length,
-        verified: data.filter(h => h.status === 'Verified').length,
+        verified: data.filter(h => h.status === 'Verified' || h.status === 'In Inventory' || h.status === 'Delivered').length,
         rejected: data.filter(h => h.status === 'Rejected').length,
         in_inventory: data.filter(h => h.status === 'In Inventory').length,
         total_fiber_kg: data.reduce((sum, h) => sum + (h.dry_fiber_output_kg || 0), 0),

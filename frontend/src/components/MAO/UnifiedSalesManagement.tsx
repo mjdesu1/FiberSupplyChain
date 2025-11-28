@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, 
-  DollarSign, 
   FileText,
   Download,
   Eye,
@@ -12,8 +11,6 @@ import {
   Edit,
   Trash2,
   Package,
-  TrendingUp,
-  TrendingDown,
   X
 } from 'lucide-react';
 import { getUserData, getAuthToken } from '../../utils/authToken';
@@ -162,19 +159,23 @@ const UnifiedSalesManagement: React.FC = () => {
       const token = getAuthToken();
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/sales/reports/${selectedReport.id}/status`, {
+      const response = await fetch(`${apiUrl}/api/sales/reports/${selectedReport.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          buyer_company_name: editFormData.buyerName,
+          quantity_sold: parseFloat(editFormData.totalQuantity),
+          total_amount: parseFloat(editFormData.totalRevenue),
           status: editFormData.status,
           reviewed_by: getUserData()?.id
         })
       });
 
       if (response.ok) {
+        await response.json();
         setRecentReports(prev =>
           prev.map(report =>
             report.id === selectedReport.id
@@ -191,7 +192,8 @@ const UnifiedSalesManagement: React.FC = () => {
         setShowEditModal(false);
         alert('✅ Report updated successfully!');
       } else {
-        alert('❌ Failed to update report');
+        const errorData = await response.json();
+        alert(`❌ Failed to update report: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating report:', error);
@@ -206,9 +208,6 @@ const UnifiedSalesManagement: React.FC = () => {
     }
 
     try {
-      const token = getAuthToken();
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
       // Since we don't have a delete endpoint, we'll just remove it from the UI
       setRecentReports(prev => prev.filter(report => report.id !== reportId));
       alert('✅ Report deleted successfully!');
@@ -295,34 +294,7 @@ const UnifiedSalesManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Calculate real trend data
-  const calculateTrend = (current: number, previous: number) => {
-    if (previous === 0) {
-      if (current === 0) return '0';
-      return `+${current.toLocaleString()}`;
-    }
-    const change = ((current - previous) / previous) * 100;
-    if (Math.abs(change) < 0.1) return '0';
-    return change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
-  };
-
-  // Mock previous month data for trend calculation (in real app, this would come from API)
-  const currentRevenue = recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalRevenue || 0), 0);
-  const previousMonthStats = {
-    verifiedRevenue: currentRevenue > 0 ? (currentRevenue === 75000 ? 0 : currentRevenue * 0.88) : 0, // If current is 75000, previous was 0
-    pendingCount: Math.ceil(recentReports.filter(r => r.status === 'pending').length * 1.05), // 5% decrease
-    totalFarmers: Math.ceil(new Set(recentReports.map(r => r.farmerId)).size * 0.92), // 8% increase
-    totalQuantity: recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalQuantity || 0), 0) * 0.85, // 15% increase
-    totalReports: Math.ceil(recentReports.length * 0.94) // 6% increase
-  };
-
-  const currentStats = {
-    verifiedRevenue: recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalRevenue || 0), 0),
-    pendingCount: recentReports.filter(r => r.status === 'pending').length,
-    totalFarmers: new Set(recentReports.map(r => r.farmerId)).size,
-    totalQuantity: recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalQuantity || 0), 0),
-    totalReports: recentReports.length
-  };
+  // Stats are calculated inline in the cards
 
   if (loading) {
     return (
@@ -352,189 +324,70 @@ const UnifiedSalesManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* Pending Verification Card - Emerald */}
-        <div className="group relative bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <Clock className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-emerald-200 rounded-full border border-emerald-300">
-              <span className="text-xs font-bold text-emerald-800">Pending</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-emerald-700">Pending Verification</p>
-            <p className="text-3xl font-bold text-emerald-900">{recentReports.filter(r => r.status === 'pending').length}</p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.pendingCount, previousMonthStats.pendingCount).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.pendingCount, previousMonthStats.pendingCount) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.pendingCount, previousMonthStats.pendingCount).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.pendingCount, previousMonthStats.pendingCount) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.pendingCount, previousMonthStats.pendingCount)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,8 10,10 20,12 30,9 40,14 50,16 60,18"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="18" r="2" fill="#10b981" />
-                </svg>
+        {/* Pending Card - Yellow */}
+        <div className="group relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Clock className="w-6 h-6 text-white" />
               </div>
             </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Pending</p>
+            <p className="text-3xl font-bold text-white">{recentReports.filter(r => r.status === 'pending').length}</p>
+            <p className="text-white/70 text-xs mt-2">
+              ₱{recentReports.filter(r => r.status === 'pending').reduce((sum, r) => sum + (r.totalRevenue || 0), 0).toLocaleString()}
+            </p>
           </div>
         </div>
 
-        {/* Total Farmers Card - Purple */}
-        <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <Users className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-purple-200 rounded-full border border-purple-300">
-              <span className="text-xs font-bold text-purple-800">Active</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-purple-700">Total Farmers</p>
-            <p className="text-3xl font-bold text-purple-900">{new Set(recentReports.map(r => r.farmerId)).size}</p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.totalFarmers, previousMonthStats.totalFarmers)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,18 10,15 20,13 30,11 40,8 50,6 60,3"
-                    fill="none"
-                    stroke="#8b5cf6"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="3" r="2" fill="#8b5cf6" />
-                </svg>
+        {/* Active Card - Purple */}
+        <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Users className="w-6 h-6 text-white" />
               </div>
             </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Active</p>
+            <p className="text-3xl font-bold text-white">{new Set(recentReports.map(r => r.farmerId)).size}</p>
+            <p className="text-white/70 text-xs mt-2">
+              {recentReports.filter(r => r.status === 'approved').length} reports
+            </p>
           </div>
         </div>
 
-        {/* Total Abaca Sold Card - Blue (cycling back) */}
-        <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <Package className="w-7 h-7 text-white" />
+        {/* Total Abaca Sold Card - Cyan */}
+        <div className="group relative bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <Package className="w-6 h-6 text-white" />
+              </div>
             </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-blue-200 rounded-full border border-blue-300">
-              <span className="text-xs font-bold text-blue-800">kg</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-blue-700">Total Abaca Sold</p>
-            <p className="text-2xl font-bold text-blue-900">
+            <p className="text-white/90 text-sm font-medium mb-1">Total Abaca Sold</p>
+            <p className="text-3xl font-bold text-white">
               {recentReports.filter(r => r.status === 'approved').reduce((sum, r) => sum + (r.totalQuantity || 0), 0).toLocaleString()} kg
             </p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.totalQuantity, previousMonthStats.totalQuantity)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,16 10,14 20,11 30,13 40,9 50,7 60,4"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="4" r="2" fill="#3b82f6" />
-                </svg>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Total Reports Card - Emerald (cycling back) */}
-        <div className="group relative bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl shadow-lg flex items-center justify-center">
-              <FileText className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-emerald-200 rounded-full border border-emerald-300">
-              <span className="text-xs font-bold text-emerald-800">Reports</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-emerald-700">Total Reports</p>
-            <p className="text-3xl font-bold text-emerald-900">{recentReports.length}</p>
-            {/* Mini Line Chart */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {calculateTrend(currentStats.totalReports, previousMonthStats.totalReports).startsWith('+') ? (
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                ) : calculateTrend(currentStats.totalReports, previousMonthStats.totalReports) === '0' ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                ) : (
-                  <TrendingDown className="w-3 h-3 text-red-500" />
-                )}
-                <span className={`text-xs font-medium ${
-                  calculateTrend(currentStats.totalReports, previousMonthStats.totalReports).startsWith('+') ? 'text-green-600' :
-                  calculateTrend(currentStats.totalReports, previousMonthStats.totalReports) === '0' ? 'text-gray-600' : 'text-red-600'
-                }`}>
-                  {calculateTrend(currentStats.totalReports, previousMonthStats.totalReports)}
-                </span>
-              </div>
-              <div className="flex-1 mx-3">
-                <svg width="60" height="20" className="overflow-visible">
-                  <polyline
-                    points="0,17 10,15 20,12 30,14 40,10 50,8 60,5"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    className="drop-shadow-sm"
-                  />
-                  <circle cx="60" cy="5" r="2" fill="#10b981" />
-                </svg>
+        {/* Reports Card - Red */}
+        <div className="group relative bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                <FileText className="w-6 h-6 text-white" />
               </div>
             </div>
+            <p className="text-white/90 text-sm font-medium mb-1">Reports</p>
+            <p className="text-3xl font-bold text-white">{recentReports.length}</p>
+            <p className="text-white/70 text-xs mt-2">
+              {recentReports.filter(r => r.status === 'rejected').length} rejected
+            </p>
           </div>
         </div>
       </div>

@@ -259,6 +259,8 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     sales: {
       totalKgSold: 0,
       totalAmount: 0,
+      pendingKgSold: 0,
+      pendingAmount: 0,
       averagePricePerKg: 0,
       numberOfBuyers: 0,
       recentSales: []
@@ -2155,7 +2157,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Pending</span>
-                            <span className="font-semibold text-gray-900">₱0</span>
+                            <span className="font-semibold text-yellow-600">₱{(dashboardData.sales?.pendingAmount || 0).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>

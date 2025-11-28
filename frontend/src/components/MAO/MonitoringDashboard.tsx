@@ -60,6 +60,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
   const stats = useMemo(() => calculateStats(records), [records]);
 
   const filteredRecords = useMemo(() => {
+    console.log('📊 MAO Dashboard: Starting filter with', records.length, 'records');
     let filtered = filterRecords(records, filters);
     
     if (searchQuery) {
@@ -71,12 +72,18 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
     }
 
     if (activeTab === 'upcoming') {
+      console.log('🔍 MAO: Filtering for upcoming...');
       filtered = getUpcomingMonitoring(filtered);
+      console.log(`✅ MAO: Upcoming filtered records: ${filtered.length}`);
     } else if (activeTab === 'overdue') {
+      console.log('🔍 MAO: Filtering for overdue...');
       filtered = getOverdueMonitoring(filtered);
+      console.log(`✅ MAO: Overdue filtered records: ${filtered.length}`);
     } else if (activeTab === 'completed') {
+      console.log('🔍 MAO: Filtering for completed...');
       filtered = filtered.filter(record => (record as any).status === 'Completed');
       filtered = sortByDate(filtered);
+      console.log(`✅ MAO: Completed filtered records: ${filtered.length}`);
     } else {
       filtered = sortByDate(filtered);
     }
@@ -442,6 +449,10 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                         <span className="px-3 py-1 rounded-full text-xs font-bold shadow-md bg-green-100 text-green-800 border border-green-300">
                           ✓ Completed
                         </span>
+                      ) : (record as any).status === 'Done Monitor' ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold shadow-md bg-gray-100 text-gray-600 border border-gray-300">
+                          ✓ Done Monitor
+                        </span>
                       ) : (
                         <span className="px-3 py-1 rounded-full text-xs font-bold shadow-md bg-blue-100 text-blue-800 border border-blue-300">
                           🔄 Ongoing
@@ -449,7 +460,15 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {record.nextMonitoringDate ? (
+                      {(record as any).status === 'Done Monitor' ? (
+                        // Show date only, no countdown for Done Monitor
+                        record.nextMonitoringDate ? (
+                          <div className="text-sm text-gray-600">{formatDate(record.nextMonitoringDate)}</div>
+                        ) : (
+                          <div className="text-sm text-gray-500 italic">No next visit</div>
+                        )
+                      ) : record.nextMonitoringDate ? (
+                        // Show date + countdown for Ongoing/Completed
                         <>
                           <div className="text-sm font-semibold text-indigo-900">
                             {formatDate(record.nextMonitoringDate)}

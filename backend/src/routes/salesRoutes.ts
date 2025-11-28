@@ -411,6 +411,58 @@ router.get('/farmer-reports/:farmerId', async (req: Request, res: Response) => {
   }
 });
 
+// Update full sales report (Admin/SuperAdmin)
+router.put('/reports/:reportId', async (req: Request, res: Response) => {
+  try {
+    const { reportId } = req.params;
+    const { buyer_company_name, quantity_sold, unit_price, total_amount, status, reviewed_by } = req.body;
+    
+    const updateData: any = {};
+    
+    // Only update fields that are provided
+    if (buyer_company_name !== undefined) updateData.buyer_company_name = buyer_company_name;
+    if (quantity_sold !== undefined) updateData.quantity_sold = parseFloat(quantity_sold);
+    if (unit_price !== undefined) updateData.unit_price = parseFloat(unit_price);
+    if (total_amount !== undefined) updateData.total_amount = parseFloat(total_amount);
+    if (status !== undefined) {
+      updateData.status = status;
+      updateData.reviewed_by = reviewed_by;
+      updateData.reviewed_at = new Date().toISOString();
+    }
+    
+    const { data: report, error } = await supabase
+      .from('sales_reports')
+      .update(updateData)
+      .eq('report_id', reportId)
+      .select()
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({
+          success: false,
+          message: 'Sales report not found'
+        });
+      }
+      throw error;
+    }
+    
+    res.json({
+      success: true,
+      message: 'Sales report updated successfully',
+      report: report
+    });
+    
+  } catch (error: any) {
+    console.error('Error updating report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update report',
+      error: error.message
+    });
+  }
+});
+
 // Approve/Reject sales report (Admin/SuperAdmin)
 router.put('/reports/:reportId/status', async (req: Request, res: Response) => {
   try {

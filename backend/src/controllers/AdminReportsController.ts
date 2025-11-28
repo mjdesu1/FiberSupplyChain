@@ -129,6 +129,23 @@ export class AdminReportsController {
 
       if (salesError) throw salesError;
 
+      // Get pending sales reports
+      const { data: pendingSalesReports, error: pendingError } = await supabase
+        .from('sales_reports')
+        .select(`
+          report_id,
+          sale_date,
+          buyer_company_name,
+          quantity_sold,
+          unit_price,
+          total_amount,
+          farmer_id
+        `)
+        .eq('status', 'pending')
+        .order('sale_date', { ascending: false });
+
+      if (pendingError) throw pendingError;
+
       // Get farmer names separately
       const farmerIds = [...new Set((salesReports || []).map(s => s.farmer_id))];
       const { data: farmers } = await supabase
@@ -138,12 +155,21 @@ export class AdminReportsController {
 
       const farmerMap = new Map(farmers?.map(f => [f.farmer_id, f.full_name]) || []);
 
-      // Calculate totals
+      // Calculate approved totals
       const totalKgSold = salesReports?.reduce(
         (sum, s) => sum + (parseFloat(s.quantity_sold) || 0), 0
       ) || 0;
 
       const totalAmount = salesReports?.reduce(
+        (sum, s) => sum + (parseFloat(s.total_amount) || 0), 0
+      ) || 0;
+
+      // Calculate pending totals
+      const pendingKgSold = pendingSalesReports?.reduce(
+        (sum, s) => sum + (parseFloat(s.quantity_sold) || 0), 0
+      ) || 0;
+
+      const pendingAmount = pendingSalesReports?.reduce(
         (sum, s) => sum + (parseFloat(s.total_amount) || 0), 0
       ) || 0;
 
@@ -167,6 +193,8 @@ export class AdminReportsController {
       res.status(200).json({
         totalKgSold: Math.round(totalKgSold * 100) / 100,
         totalAmount: Math.round(totalAmount * 100) / 100,
+        pendingKgSold: Math.round(pendingKgSold * 100) / 100,
+        pendingAmount: Math.round(pendingAmount * 100) / 100,
         averagePricePerKg: Math.round(averagePricePerKg * 100) / 100,
         numberOfBuyers,
         recentSales

@@ -199,25 +199,30 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <button
-          onClick={onBack}
-          className="mb-6 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to home
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Abaca Leaf Decorations */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-green-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+      <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-teal-200/20 rounded-full blur-2xl"></div>
+      
+      <div className="max-w-md w-full relative z-10">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
+          {/* Back Button */}
+          <button
+            onClick={onBack}
+            className="mb-6 flex items-center text-gray-600 hover:text-green-700 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
 
-        <div className="bg-white rounded-xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-teal-100 flex items-center justify-center">
-              <User className="w-8 h-8 text-teal-600" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+              <User className="w-8 h-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              {isLogin ? 'Farmer Login' : 'Farmer Registration'}
+              {isLogin ? 'Farmer Portal' : 'Farmer Registration'}
             </h2>
-            <p className="text-gray-600 text-sm">For abaca farmers</p>
+            <p className="text-gray-600 text-sm">For Abaca Farmers</p>
           </div>
 
           <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
@@ -227,7 +232,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                 setCurrentStep(1);
               }}
               className={`flex-1 py-2 rounded-md transition-colors ${
-                isLogin ? 'bg-white shadow text-gray-800 font-medium' : 'text-gray-600'
+                isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
               }`}
             >
               Login
@@ -238,7 +243,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                 setCurrentStep(1);
               }}
               className={`flex-1 py-2 rounded-md transition-colors ${
-                !isLogin ? 'bg-white shadow text-gray-800 font-medium' : 'text-gray-600'
+                !isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
               }`}
             >
               Register
@@ -260,7 +265,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                   placeholder="your.email@example.com"
                 />
               </div>
@@ -272,7 +277,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                   placeholder="••••••••"
                 />
               </div>
@@ -280,9 +285,16 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
               >
-                {loading ? 'Logging in...' : 'Login'}
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Logging in...
+                  </div>
+                ) : (
+                  'Login'
+                )}
               </button>
             </form>
           ) : (
@@ -292,16 +304,16 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex flex-col items-center flex-1">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
-                      currentStep >= 1 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
+                      currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
                     }`}>
                       1
                     </div>
                     <span className={`text-xs font-medium text-center ${
-                      currentStep >= 1 ? 'text-teal-700' : 'text-gray-500'
+                      currentStep >= 1 ? 'text-green-700' : 'text-gray-500'
                     }`}>Personal Info</span>
                   </div>
                   <div className={`flex-1 h-1 mx-2 mt-[-20px] ${
-                    currentStep > 1 ? 'bg-teal-600' : 'bg-gray-200'
+                    currentStep > 1 ? 'bg-green-600' : 'bg-gray-200'
                   }`}></div>
                   <div className="flex flex-col items-center flex-1">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
@@ -339,7 +351,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.fullName || ''}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="Juan Dela Cruz"
                     />
                   </div>
@@ -350,7 +362,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                       <select
                         value={formData.sex || ''}
                         onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       >
                         <option value="">Select</option>
                         <option value="Male">Male</option>
@@ -364,7 +376,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         min="18"
                         value={formData.age || ''}
                         onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="45"
                       />
                     </div>
@@ -374,7 +386,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="tel"
                         value={formData.contactNumber || ''}
                         onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="09171234567"
                       />
                     </div>
@@ -387,7 +399,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="text"
                         value={formData.address || ''}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Purok 1"
                       />
                     </div>
@@ -397,7 +409,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="text"
                         value={formData.barangay || ''}
                         onChange={(e) => setFormData({ ...formData, barangay: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Culiram"
                       />
                     </div>
@@ -407,7 +419,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="text"
                         value={formData.municipality || ''}
                         onChange={(e) => setFormData({ ...formData, municipality: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Prosperidad"
                       />
                     </div>
@@ -419,7 +431,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                       type="text"
                       value={formData.associationName || ''}
                       onChange={(e) => setFormData({ ...formData, associationName: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="CuSAFA"
                     />
                   </div>
@@ -436,7 +448,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="text"
                         value={formData.farmLocation || ''}
                         onChange={(e) => setFormData({ ...formData, farmLocation: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Sitio Riverside"
                       />
                     </div>
@@ -446,7 +458,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="text"
                         value={formData.farmCoordinates || ''}
                         onChange={(e) => setFormData({ ...formData, farmCoordinates: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="8.5167,126.0833"
                       />
                     </div>
@@ -460,7 +472,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         step="0.01"
                         value={formData.farmAreaHectares || ''}
                         onChange={(e) => setFormData({ ...formData, farmAreaHectares: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="2.5"
                       />
                     </div>
@@ -470,7 +482,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="number"
                         value={formData.yearsInFarming || ''}
                         onChange={(e) => setFormData({ ...formData, yearsInFarming: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="15"
                       />
                     </div>
@@ -480,7 +492,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="text"
                         value={formData.typeOfAbacaPlanted || ''}
                         onChange={(e) => setFormData({ ...formData, typeOfAbacaPlanted: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Musa Textilis"
                       />
                     </div>
@@ -494,7 +506,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         step="0.01"
                         value={formData.averageHarvestVolumeKg || ''}
                         onChange={(e) => setFormData({ ...formData, averageHarvestVolumeKg: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="500"
                       />
                     </div>
@@ -504,7 +516,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         type="number"
                         value={formData.harvestFrequencyWeeks || ''}
                         onChange={(e) => setFormData({ ...formData, harvestFrequencyWeeks: parseInt(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="12"
                       />
                     </div>
@@ -518,7 +530,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         step="0.01"
                         value={formData.sellingPriceRangeMin || ''}
                         onChange={(e) => setFormData({ ...formData, sellingPriceRangeMin: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="25.00"
                       />
                     </div>
@@ -529,7 +541,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         step="0.01"
                         value={formData.sellingPriceRangeMax || ''}
                         onChange={(e) => setFormData({ ...formData, sellingPriceRangeMax: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="30.00"
                       />
                     </div>
@@ -540,7 +552,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         step="0.01"
                         value={formData.incomePerCycle || ''}
                         onChange={(e) => setFormData({ ...formData, incomePerCycle: parseFloat(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="15000"
                       />
                     </div>
@@ -552,7 +564,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                       type="text"
                       value={formData.regularBuyer || ''}
                       onChange={(e) => setFormData({ ...formData, regularBuyer: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="Noy-Noy Abaca Trading"
                     />
                   </div>
@@ -652,7 +664,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -665,7 +677,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Min. 8 characters"
                       />
                     </div>
@@ -676,7 +688,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                         required
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="Re-enter password"
                       />
                     </div>
@@ -713,7 +725,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="ml-auto px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium flex items-center gap-2"
+                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition font-medium flex items-center gap-2 shadow-lg hover:shadow-xl"
                   >
                     Next
                     <ChevronRight className="w-4 h-4" />
@@ -722,7 +734,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
                   <button
                     type="submit"
                     disabled={loading}
-                    className="ml-auto px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium disabled:opacity-50"
+                    className="ml-auto px-5 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition font-medium disabled:opacity-50 shadow-lg hover:shadow-xl"
                   >
                     {loading ? 'Registering...' : 'Complete Registration'}
                   </button>
@@ -730,6 +742,15 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
               </div>
             </form>
           )}
+
+          {/* Footer */}
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-500 text-center">
+              Authorized personnel only. All activities are logged and monitored.
+              <br />
+              Protected by reCAPTCHA and secured with SSL encryption.
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -234,27 +234,57 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <button
-          onClick={onBack}
-          className="mb-6 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to home
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Abaca Leaf Decorations */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-green-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+      <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-teal-200/20 rounded-full blur-2xl"></div>
+      
+      <div className="max-w-md w-full relative z-10">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
+          {/* Back Button */}
+          <button
+            onClick={onBack}
+            className="mb-6 flex items-center text-gray-600 hover:text-green-700 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
 
-        <div className="bg-white rounded-xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              {isLogin ? 'CUSAFA Login' : 'CUSAFA Registration'}
+              {isLogin ? 'CUSAFA Portal' : 'CUSAFA Registration'}
             </h2>
             <p className="text-gray-600 text-sm">
-              {isLogin ? 'For CUSAFA organization officers' : 'Register as CUSAFA officer'}
+              {isLogin ? 'For CUSAFA Organization Officers' : 'Register as CUSAFA officer'}
             </p>
+          </div>
+
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => {
+                setIsLogin(true);
+                setCurrentStep(1);
+              }}
+              className={`flex-1 py-2 rounded-md transition-colors ${
+                isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => {
+                setIsLogin(false);
+                setCurrentStep(1);
+              }}
+              className={`flex-1 py-2 rounded-md transition-colors ${
+                !isLogin ? 'bg-white shadow text-green-700 font-medium' : 'text-gray-600'
+              }`}
+            >
+              Register
+            </button>
           </div>
 
           {error && (
@@ -273,7 +303,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                   placeholder="your.email@cusafa.com"
                 />
               </div>
@@ -286,7 +316,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                     placeholder="••••••••"
                   />
                   <button
@@ -302,49 +332,61 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
               >
-                {loading ? 'Logging in...' : 'Login'}
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Logging in...
+                  </div>
+                ) : (
+                  'Login'
+                )}
               </button>
-
-              <div className="text-center mt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(false);
-                    setError('');
-                  }}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  Don't have an account? Register here
-                </button>
-              </div>
             </form>
           ) : (
             // REGISTRATION FORM
             <form onSubmit={handleRegister} className="space-y-4">
               {/* Progress Indicator */}
-              <div className="flex items-center justify-between mb-6">
-                {[1, 2, 3].map((step) => (
-                  <div key={step} className="flex items-center">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                        currentStep >= step
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-600'
-                      }`}
-                    >
-                      {step}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
+                      currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      1
                     </div>
-                    {step < 3 && (
-                      <div
-                        className={`w-16 h-1 mx-2 ${
-                          currentStep > step ? 'bg-blue-600' : 'bg-gray-200'
-                        }`}
-                      />
-                    )}
+                    <span className={`text-xs font-medium text-center ${
+                      currentStep >= 1 ? 'text-green-700' : 'text-gray-500'
+                    }`}>Basic Info</span>
                   </div>
-                ))}
+                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${
+                    currentStep > 1 ? 'bg-green-600' : 'bg-gray-200'
+                  }`}></div>
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
+                      currentStep >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      2
+                    </div>
+                    <span className={`text-xs font-medium text-center ${
+                      currentStep >= 2 ? 'text-green-700' : 'text-gray-500'
+                    }`}>Officer Details</span>
+                  </div>
+                  <div className={`flex-1 h-1 mx-2 mt-[-20px] ${
+                    currentStep > 2 ? 'bg-green-600' : 'bg-gray-200'
+                  }`}></div>
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm mb-1 ${
+                      currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      3
+                    </div>
+                    <span className={`text-xs font-medium text-center ${
+                      currentStep >= 3 ? 'text-green-700' : 'text-gray-500'
+                    }`}>Document Upload</span>
+                  </div>
+                </div>
               </div>
 
               {/* Step 1: Basic Information */}
@@ -359,7 +401,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                       placeholder="Juan Dela Cruz"
                     />
                   </div>
@@ -371,7 +413,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                       placeholder="your.email@cusafa.com"
                     />
                   </div>
@@ -384,7 +426,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                         placeholder="••••••••"
                       />
                       <button
@@ -404,7 +446,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                       placeholder="••••••••"
                     />
                   </div>
@@ -413,7 +455,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                     type="button"
                     onClick={nextStep}
                     disabled={!canProceedToStep2()}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl"
                   >
                     Next <ChevronRight className="w-5 h-5 ml-2" />
                   </button>
@@ -431,7 +473,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.position}
                       onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                     >
                       <option value="">Select Position</option>
                       <option value="President">President</option>
@@ -451,7 +493,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.associationName}
                       onChange={(e) => setFormData({ ...formData, associationName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                       placeholder="CUSAFA"
                     />
                   </div>
@@ -463,7 +505,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       required
                       value={formData.contactNumber}
                       onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                       placeholder="09123456789"
                     />
                   </div>
@@ -473,7 +515,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                     <textarea
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                       placeholder="Complete address"
                       rows={3}
                     />
@@ -485,7 +527,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       type="text"
                       value={formData.termDuration}
                       onChange={(e) => setFormData({ ...formData, termDuration: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
                       placeholder="e.g., 2024-2026"
                     />
                   </div>
@@ -502,7 +544,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                       type="button"
                       onClick={nextStep}
                       disabled={!canProceedToStep3()}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl"
                     >
                       Next <ChevronRight className="w-5 h-5 ml-2" />
                     </button>
@@ -583,7 +625,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                     )}
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800">
                     <p className="font-medium mb-1">⚠️ Verification Required</p>
                     <p>Your account will be pending verification after registration. An administrator will review and approve your account before you can login.</p>
                   </div>
@@ -599,7 +641,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
                     >
                       {loading ? 'Registering...' : 'Register'}
                     </button>
@@ -607,21 +649,17 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
                 </div>
               )}
 
-              <div className="text-center mt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(true);
-                    setCurrentStep(1);
-                    setError('');
-                  }}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  Already have an account? Login here
-                </button>
-              </div>
             </form>
           )}
+
+          {/* Footer */}
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-500 text-center">
+              Authorized personnel only. All activities are logged and monitored.
+              <br />
+              Protected by reCAPTCHA and secured with SSL encryption.
+            </p>
+          </div>
         </div>
       </div>
     </div>

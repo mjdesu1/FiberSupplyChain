@@ -52,7 +52,8 @@ export const daysUntilMonitoring = (nextDate: string): number => {
 /**
  * Check if monitoring is overdue
  */
-export const isOverdue = (nextDate: string): boolean => {
+export const isOverdue = (nextDate: string | null | undefined): boolean => {
+  if (!nextDate) return false;
   const days = daysUntilMonitoring(nextDate);
   return days < 0;
 };
@@ -60,9 +61,10 @@ export const isOverdue = (nextDate: string): boolean => {
 /**
  * Check if monitoring is upcoming (within 30 days and not overdue)
  */
-export const isUpcoming = (nextDate: string): boolean => {
+export const isUpcoming = (nextDate: string | null | undefined): boolean => {
+  if (!nextDate) return false;
   const days = daysUntilMonitoring(nextDate);
-  return days >= 0 && days <= 30;
+  return days >= 0;
 };
 
 /**
@@ -193,17 +195,29 @@ export const getLatestRecordPerFarmer = (records: MonitoringRecord[]): Monitorin
 
 /**
  * Get upcoming monitoring records
- * Only shows the latest Ongoing record per farmer
+ * Only shows the latest Ongoing record per farmer with future next_monitoring_date
  */
 export const getUpcomingMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  console.log('🔍 getUpcomingMonitoring: Input records:', records.length);
+  
   // Get only latest Ongoing record per farmer
   const latestRecords = getLatestRecordPerFarmer(records);
+  console.log('🔍 Latest records per farmer:', latestRecords.length);
   
-  return latestRecords
-    .filter(record => isUpcoming(record.nextMonitoringDate))
+  const upcoming = latestRecords
+    .filter(record => {
+      // Must have a next monitoring date and it must be in the future
+      const hasDate = !!record.nextMonitoringDate;
+      const isUpcomingDate = hasDate && isUpcoming(record.nextMonitoringDate);
+      console.log(`  Record ${record.monitoringId}: hasDate=${hasDate}, nextDate=${record.nextMonitoringDate}, isUpcoming=${isUpcomingDate}`);
+      return hasDate && isUpcomingDate;
+    })
     .sort((a, b) => 
       new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
     );
+  
+  console.log('✅ getUpcomingMonitoring: Returning', upcoming.length, 'records');
+  return upcoming;
 };
 
 /**
@@ -211,14 +225,26 @@ export const getUpcomingMonitoring = (records: MonitoringRecord[]): MonitoringRe
  * Only shows the latest Ongoing record per farmer that is overdue
  */
 export const getOverdueMonitoring = (records: MonitoringRecord[]): MonitoringRecord[] => {
+  console.log('🔍 getOverdueMonitoring: Input records:', records.length);
+  
   // Get only latest Ongoing record per farmer
   const latestRecords = getLatestRecordPerFarmer(records);
+  console.log('🔍 Latest records per farmer:', latestRecords.length);
   
-  return latestRecords
-    .filter(record => isOverdue(record.nextMonitoringDate))
+  const overdue = latestRecords
+    .filter(record => {
+      // Must have a next monitoring date and it must be in the past
+      const hasDate = !!record.nextMonitoringDate;
+      const isOverdueDate = hasDate && isOverdue(record.nextMonitoringDate);
+      console.log(`  Record ${record.monitoringId}: hasDate=${hasDate}, nextDate=${record.nextMonitoringDate}, isOverdue=${isOverdueDate}`);
+      return hasDate && isOverdueDate;
+    })
     .sort((a, b) => 
       new Date(a.nextMonitoringDate).getTime() - new Date(b.nextMonitoringDate).getTime()
     );
+  
+  console.log('✅ getOverdueMonitoring: Returning', overdue.length, 'records');
+  return overdue;
 };
 
 /**

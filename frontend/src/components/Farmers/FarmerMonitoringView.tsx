@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
   Eye,
@@ -6,7 +6,12 @@ import {
   AlertCircle,
   CheckCircle,
   TrendingUp,
-  X
+  X,
+  Search,
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+  User
 } from 'lucide-react';
 import { MonitoringRecord } from '../../types/monitoring';
 import {
@@ -25,10 +30,120 @@ const FarmerMonitoringView: React.FC = () => {
   const [records, setRecords] = useState<MonitoringRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState<MonitoringRecord | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed'>('all');
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchMyMonitoringRecords();
   }, []);
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    console.log('📊 Calculating stats from records:', records.length);
+    
+    // Count all Ongoing records with upcoming dates (future dates)
+    const upcoming = records.filter(r => {
+      const status = (r as any).status;
+      if (status !== 'Ongoing') return false;
+      if (!r.nextMonitoringDate) return false;
+      
+      const days = daysUntilMonitoring(r.nextMonitoringDate);
+      const isUpcoming = days >= 0;
+      console.log(`Record ${r.monitoringId}: status=${status}, nextDate=${r.nextMonitoringDate}, days=${days}, isUpcoming=${isUpcoming}`);
+      return isUpcoming;
+    }).length;
+    
+    // Count all Ongoing records with overdue dates (past dates)
+    const overdue = records.filter(r => {
+      const status = (r as any).status;
+      if (status !== 'Ongoing') return false;
+      if (!r.nextMonitoringDate) return false;
+      
+      const days = daysUntilMonitoring(r.nextMonitoringDate);
+      return days < 0;
+    }).length;
+    
+    // Get the latest Ongoing record's next visit date for display
+    const ongoingRecords = records.filter(r => (r as any).status === 'Ongoing');
+    const sortedOngoing = [...ongoingRecords].sort((a, b) => 
+      new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
+    );
+    const nextVisitDate = sortedOngoing[0]?.nextMonitoringDate || null;
+    
+    const completed = records.filter(r => (r as any).status === 'Completed').length;
+    
+    console.log('📈 Stats calculated:', { upcoming, overdue, completed, nextVisitDate });
+    return { upcoming, nextVisitDate, overdue, completed };
+  }, [records]);
+
+  // Filter and search records
+  const filteredRecords = useMemo(() => {
+    let filtered = [...records].sort((a, b) => 
+      new Date(b.dateOfVisit).getTime() - new Date(a.dateOfVisit).getTime()
+    );
+    
+    if (searchQuery) {
+      filtered = filtered.filter(record =>
+        record.monitoredBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        record.monitoringId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        record.farmCondition.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (activeTab === 'upcoming') {
+      console.log('🔍 Filtering for upcoming tab...');
+      // Show all Ongoing records with upcoming next_monitoring_date
+      filtered = filtered.filter(record => {
+        const status = (record as any).status;
+        console.log(`Checking record ${record.monitoringId}: status=${status}, nextDate=${record.nextMonitoringDate}`);
+        
+        if (status !== 'Ongoing') {
+          console.log(`  ❌ Not Ongoing`);
+          return false;
+        }
+        if (!record.nextMonitoringDate) {
+          console.log(`  ❌ No next monitoring date`);
+          return false;
+        }
+        
+        const days = daysUntilMonitoring(record.nextMonitoringDate);
+        const isUpcoming = days >= 0;
+        console.log(`  Days until monitoring: ${days}, isUpcoming: ${isUpcoming}`);
+        return isUpcoming;
+      });
+      console.log(`✅ Upcoming filtered records: ${filtered.length}`);
+    } else if (activeTab === 'overdue') {
+      console.log('🔍 Filtering for overdue tab...');
+      // Show all Ongoing records with overdue next_monitoring_date
+      filtered = filtered.filter(record => {
+        const status = (record as any).status;
+        if (status !== 'Ongoing') return false;
+        if (!record.nextMonitoringDate) return false;
+        
+        const days = daysUntilMonitoring(record.nextMonitoringDate);
+        return days < 0;
+      });
+      console.log(`✅ Overdue filtered records: ${filtered.length}`);
+    } else if (activeTab === 'completed') {
+      console.log('🔍 Filtering for completed tab...');
+      filtered = filtered.filter(r => (r as any).status === 'Completed');
+      console.log(`✅ Completed filtered records: ${filtered.length}`);
+    }
+
+    return filtered;
+  }, [records, searchQuery, activeTab]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentRecords = filteredRecords.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const fetchMyMonitoringRecords = async () => {
     try {
@@ -71,8 +186,9 @@ const FarmerMonitoringView: React.FC = () => {
         remarks: record.remarks,
         photoUrls: record.photo_urls,
         createdAt: record.created_at,
-        updatedAt: record.updated_at
-      })) || [];
+        updatedAt: record.updated_at,
+        status: record.status || 'Ongoing' // Add status field
+      } as any)) || [];
 
       setRecords(mappedRecords);
     } catch (error) {
@@ -96,7 +212,7 @@ const FarmerMonitoringView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Statistics */}
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-xl p-6 group hover:scale-105 transition-transform duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
@@ -122,7 +238,7 @@ const FarmerMonitoringView: React.FC = () => {
               <span className="text-white/80 text-xs font-semibold uppercase tracking-wider">Upcoming</span>
             </div>
             <p className="text-lg font-bold text-white mb-1">
-              {records.length > 0 ? formatDate(records[0].nextMonitoringDate) : 'Not scheduled'}
+              {stats.nextVisitDate ? formatDate(stats.nextVisitDate) : 'Not scheduled'}
             </p>
             <p className="text-blue-100 text-sm font-medium">Next Visit</p>
           </div>
@@ -138,131 +254,267 @@ const FarmerMonitoringView: React.FC = () => {
               <span className="text-white/80 text-xs font-semibold uppercase tracking-wider">Status</span>
             </div>
             <p className="text-2xl font-bold text-white mb-1">
-              {records.length > 0 ? records[0].farmCondition : 'No data'}
+              {records.length > 0 && records[0] ? records[0].farmCondition : 'No data'}
             </p>
             <p className="text-green-100 text-sm font-medium">Farm Condition</p>
           </div>
         </div>
       </div>
 
-      {/* Monitoring Records */}
-      <div className="space-y-4">
-        {records.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-20 text-center border-2 border-dashed border-gray-300">
-            <div className="w-24 h-24 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Calendar className="w-12 h-12 text-emerald-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">No monitoring records yet</h3>
-            <p className="text-gray-600 text-base">Your MAO visit records will appear here</p>
+      {/* Tab Filters */}
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'all'
+              ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-xl shadow-slate-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'all' ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-slate-100'
+          }`}>
+            <Activity className="w-5 h-5" />
           </div>
-        ) : (
-          records.map((record) => (
-            <div key={record.monitoringId} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border-l-4 border-emerald-500 overflow-hidden">
-              <div className="p-6">
-                <div className="flex flex-col lg:flex-row justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-5">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 bg-emerald-100 rounded-lg">
-                            <Leaf className="w-5 h-5 text-emerald-600" />
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-900">Farm Visit Report</h3>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                          <span>Officer:</span>
-                          <span className="font-semibold text-gray-900">{record.monitoredBy}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="inline-block text-xs font-mono text-white bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-1.5 rounded-lg shadow-md">
-                          {record.monitoringId}
-                        </span>
-                      </div>
-                    </div>
+          <span>All Records ({records.length})</span>
+          {activeTab === 'all' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => { setActiveTab('upcoming'); setCurrentPage(1); }}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'upcoming'
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'upcoming' ? 'bg-white/20' : 'bg-emerald-50 group-hover:bg-emerald-100'
+          }`}>
+            <Calendar className="w-5 h-5" />
+          </div>
+          <span>Upcoming ({stats.upcoming})</span>
+          {activeTab === 'upcoming' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => { setActiveTab('overdue'); setCurrentPage(1); }}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'overdue'
+              ? 'bg-gradient-to-r from-amber-400 to-orange-600 text-white shadow-xl shadow-amber-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'overdue' ? 'bg-white/20' : 'bg-amber-50 group-hover:bg-amber-100'
+          }`}>
+            <AlertCircle className="w-5 h-5" />
+          </div>
+          <span>Overdue ({stats.overdue})</span>
+          {activeTab === 'overdue' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'completed'
+              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'completed' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
+          }`}>
+            <CheckCircle className="w-5 h-5" />
+          </div>
+          <span>Completed ({stats.completed})</span>
+          {activeTab === 'completed' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+      </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 mb-1 font-medium">Visit Date</p>
-                        <p className="text-sm font-bold text-gray-900">{formatDate(record.dateOfVisit)}</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 mb-1 font-medium">Farm Condition</p>
-                        <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-bold ${getConditionColor(record.farmCondition)}`}>
-                          {record.farmCondition}
-                        </span>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 mb-1 font-medium">Growth Stage</p>
-                        <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-bold ${getGrowthStageColor(record.growthStage)}`}>
-                          {record.growthStage}
-                        </span>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 mb-1 font-medium">Est. Yield</p>
-                        <p className="text-sm font-bold text-gray-900">{record.estimatedYield || 'N/A'} kg</p>
-                      </div>
-                    </div>
+      {/* Search Bar */}
+      <div className="bg-white rounded-xl shadow-md p-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search by officer, monitoring ID, or condition..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+          />
+        </div>
+      </div>
 
-                    {record.issuesObserved.length > 0 && (
-                      <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p className="text-sm text-red-800 font-bold mb-2 flex items-center">
-                          <AlertCircle className="w-4 h-4 mr-2" />
-                          Issues Observed
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {record.issuesObserved.map((issue, idx) => (
-                            <span key={idx} className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-md">
-                              {issue}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg p-4 mb-4 shadow-md">
-                      <p className="text-sm text-white font-bold mb-2 flex items-center">
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        Recommendations
-                      </p>
-                      <p className="text-sm text-white/95 leading-relaxed">{record.recommendations}</p>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg p-4 shadow-md">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-white/80 font-semibold mb-1">Next Monitoring</p>
-                          <p className="text-lg font-bold text-white">
-                            {formatDate(record.nextMonitoringDate)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs font-bold">
-                            {daysUntilMonitoring(record.nextMonitoringDate) >= 0 
-                              ? `${daysUntilMonitoring(record.nextMonitoringDate)} days`
-                              : `${Math.abs(daysUntilMonitoring(record.nextMonitoringDate))} days overdue`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex lg:flex-col gap-2">
+      {/* Table */}
+      {filteredRecords.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-lg p-20 text-center">
+          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-800 mb-2">No records found</h3>
+          <p className="text-gray-500">Try adjusting your filters or search query</p>
+        </div>
+      ) : (
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden">
+          {/* Pagination Top */}
+          <div className="p-6 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Show entries:</span>
+                <div className="flex gap-2">
+                  {[10, 20, 30].map((size) => (
                     <button
-                      onClick={() => setSelectedRecord(record)}
-                      className="flex-1 lg:flex-none px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-105"
+                      key={size}
+                      onClick={() => { setItemsPerPage(size); setCurrentPage(1); }}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                        itemsPerPage === size
+                          ? 'bg-emerald-500 text-white shadow-lg'
+                          : 'bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-emerald-50'
+                      }`}
                     >
-                      <Eye className="w-4 h-4" />
-                      <span className="text-sm">View Details</span>
+                      {size}
                     </button>
-                  </div>
+                  ))}
                 </div>
               </div>
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of {filteredRecords.length} entries
+              </div>
             </div>
-          ))
-        )}
-      </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-emerald-100 to-teal-100">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Farmer</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Visit Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Officer</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Condition</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Growth Stage</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Next Visit</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {currentRecords.map((record, index) => (
+                    <tr key={record.monitoringId} className={`hover:bg-emerald-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-400" />
+                          <div className="text-sm font-mono text-gray-500">{record.monitoringId}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">{formatDate(record.dateOfVisit)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{record.monitoredBy}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getConditionColor(record.farmCondition)}`}>
+                          {record.farmCondition}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{record.growthStage}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(record as any).status === 'Completed' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                            ✓ Completed
+                          </span>
+                        ) : (record as any).status === 'Done Monitor' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                            ✓ Done Monitor
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                            🔄 Ongoing
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(record as any).status === 'Done Monitor' ? (
+                          // Show date only, no countdown for Done Monitor
+                          record.nextMonitoringDate ? (
+                            <div className="text-sm text-gray-600">{formatDate(record.nextMonitoringDate)}</div>
+                          ) : (
+                            <div className="text-sm text-gray-500 italic">No next visit</div>
+                          )
+                        ) : record.nextMonitoringDate ? (
+                          // Show date + countdown for Ongoing/Completed
+                          <>
+                            <div className="text-sm font-semibold text-gray-900">{formatDate(record.nextMonitoringDate)}</div>
+                            <div className="text-xs text-emerald-600">
+                              ({daysUntilMonitoring(record.nextMonitoringDate) >= 0 
+                                ? `in ${daysUntilMonitoring(record.nextMonitoringDate)} days`
+                                : `${Math.abs(daysUntilMonitoring(record.nextMonitoringDate))} days overdue`})
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-sm text-gray-500 italic">No next visit</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => setSelectedRecord(record)}
+                          className="p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-all"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Bottom */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-center items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 hover:bg-gray-100 border border-gray-300 flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                      currentPage === page
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-600 hover:bg-gray-100 border border-gray-300 flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* View Details Modal - Complete Information */}
       {selectedRecord && (

@@ -277,51 +277,59 @@ const SalesVerificationDashboard: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalTransactions}</p>
+          {/* Total Transactions - Blue */}
+          <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Package className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Package className="w-6 h-6 text-blue-600" />
-              </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Total Transactions</p>
+              <p className="text-3xl font-bold text-white">{stats.totalTransactions}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Verification</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.pendingVerification}</p>
+          {/* Pending Verification - Yellow */}
+          <div className="group relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-6 h-6 text-yellow-600" />
-              </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Pending Verification</p>
+              <p className="text-3xl font-bold text-white">{stats.pendingVerification}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-green-600">₱{stats.totalRevenue.toLocaleString()}</p>
+          {/* Total Revenue - Green */}
+          <div className="group relative bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Total Revenue</p>
+              <p className="text-3xl font-bold text-white">₱{stats.totalRevenue.toLocaleString()}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Farmers</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.uniqueFarmers}</p>
+          {/* Active Farmers - Red */}
+          <div className="group relative bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl p-6 shadow-lg overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
+              <p className="text-white/90 text-sm font-medium mb-1">Active Farmers</p>
+              <p className="text-3xl font-bold text-white">{stats.uniqueFarmers}</p>
             </div>
           </div>
         </div>
