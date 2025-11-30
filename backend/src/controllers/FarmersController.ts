@@ -7,9 +7,27 @@ export class FarmersController {
   // Get farmer profile
   static async getFarmerProfile(req: Request, res: Response) {
     try {
-      const farmerProfile = await FarmersService.getFarmerProfile();
-      res.status(200).json(farmerProfile);
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const { data: farmer, error } = await supabase
+        .from('farmers')
+        .select('full_name, contact_number, address, municipality, barangay, association_name, farm_location, farm_coordinates, farm_area_hectares')
+        .eq('farmer_id', userId)
+        .single();
+
+      if (error || !farmer) {
+        console.error('Error fetching farmer profile:', error);
+        res.status(404).json({ error: 'Farmer not found' });
+        return;
+      }
+
+      res.status(200).json({ farmer });
     } catch (error) {
+      console.error('Error in getFarmerProfile:', error);
       res.status(500).json({ error: 'Failed to fetch farmer profile' });
     }
   }
@@ -42,7 +60,10 @@ export class FarmersController {
         barangay,
         municipality,
         association_name,
-        profilePhoto
+        profilePhoto,
+        farm_location,
+        farm_coordinates,
+        farm_area_hectares
       } = req.body;
 
       console.log('📝 Farmer updating profile:', {
@@ -65,6 +86,9 @@ export class FarmersController {
           municipality,
           association_name,
           profile_photo: profilePhoto || null,
+          farm_location,
+          farm_coordinates,
+          farm_area_hectares: farm_area_hectares ? parseFloat(farm_area_hectares) : null,
           updated_at: new Date().toISOString()
         })
         .eq('farmer_id', userId)

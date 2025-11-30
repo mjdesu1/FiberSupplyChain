@@ -99,7 +99,7 @@ export class HarvestController {
       // Get farmer details to auto-populate location and contact info
       const { data: farmer, error: farmerError } = await supabase
         .from('farmers')
-        .select('full_name, contact_number, address, municipality, barangay, association_name')
+        .select('full_name, contact_number, address, municipality, barangay, association_name, farm_location, farm_coordinates, farm_area_hectares')
         .eq('farmer_id', userId)
         .single();
 
@@ -115,15 +115,15 @@ export class HarvestController {
           // Farmer ID
           farmer_id: userId,
 
-          // Location (auto-populated from farmer profile)
+          // Location (auto-populated from farmer profile, can be overridden)
           county_province: farmer.address, // Using address as county/province
           municipality: farmer.municipality,
           barangay: farmer.barangay,
-          farm_coordinates,
-          landmark,
+          farm_coordinates: farm_coordinates || farmer.farm_coordinates,
+          landmark: landmark || farmer.farm_location,
           farm_name,
           farm_code,
-          area_hectares,
+          area_hectares: area_hectares || farmer.farm_area_hectares,
           plot_lot_id,
 
           // Farmer Info (auto-populated from farmer profile)

@@ -7,6 +7,9 @@ interface FarmerProfile {
   municipality: string;
   barangay: string;
   association_name: string;
+  farm_location: string;
+  farm_coordinates: string;
+  farm_area_hectares: number;
 }
 
 interface PlantedSeedling {
@@ -143,6 +146,16 @@ export default function HarvestSubmissionPage() {
       if (response.ok) {
         const data = await response.json();
         setFarmerProfile(data.farmer);
+        
+        // Auto-fill farm location fields from profile
+        if (data.farmer) {
+          setFormData(prev => ({
+            ...prev,
+            farm_coordinates: data.farmer.farm_coordinates || '',
+            landmark: data.farmer.farm_location || '',
+            area_hectares: data.farmer.farm_area_hectares ? data.farmer.farm_area_hectares.toString() : ''
+          }));
+        }
       } else {
         console.warn('Failed to fetch farmer profile:', response.status);
       }
@@ -230,45 +243,73 @@ export default function HarvestSubmissionPage() {
   };
 
   return (
-    <div>
-      <div className="max-w-4xl mx-auto">
-        <div>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mb-4 shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Submit New Harvest</h1>
+          <p className="text-gray-600 text-lg">Record your abaca harvest details</p>
+        </div>
 
-          {/* Auto-filled Farmer Info */}
-          {farmerProfile && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <h2 className="font-semibold text-green-900 mb-2">Farmer Information (Auto-filled)</h2>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Name:</span>
-                  <span className="ml-2 font-medium">{farmerProfile.full_name}</span>
+        {/* Auto-filled Farmer Info */}
+        {farmerProfile && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Farmer Information (Auto-filled)</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <p className="text-gray-500 text-xs mb-1">Name</p>
+                <p className="font-semibold text-lg text-gray-900">{farmerProfile.full_name}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <p className="text-gray-500 text-xs mb-1">Contact</p>
+                <p className="font-semibold text-lg text-gray-900">{farmerProfile.contact_number}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <p className="text-gray-500 text-xs mb-1">Municipality</p>
+                <p className="font-semibold text-lg text-gray-900">{farmerProfile.municipality}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <p className="text-gray-500 text-xs mb-1">Barangay</p>
+                <p className="font-semibold text-lg text-gray-900">{farmerProfile.barangay}</p>
+              </div>
+              {farmerProfile.association_name && (
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 md:col-span-2">
+                  <p className="text-gray-500 text-xs mb-1">Association</p>
+                  <p className="font-semibold text-lg text-gray-900">{farmerProfile.association_name}</p>
                 </div>
-                <div>
-                  <span className="text-gray-600">Contact:</span>
-                  <span className="ml-2 font-medium">{farmerProfile.contact_number}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Municipality:</span>
-                  <span className="ml-2 font-medium">{farmerProfile.municipality}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Barangay:</span>
-                  <span className="ml-2 font-medium">{farmerProfile.barangay}</span>
-                </div>
-                {farmerProfile.association_name && (
-                  <div className="col-span-2">
-                    <span className="text-gray-600">Association:</span>
-                    <span className="ml-2 font-medium">{farmerProfile.association_name}</span>
-                  </div>
-                )}
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Main Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Farm Location */}
+          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center mb-5">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Farm Location</h2>
+                <p className="text-sm text-emerald-600">Auto-filled from your profile</p>
               </div>
             </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Farm Location */}
-            <section>
-              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Farm Location</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -320,9 +361,16 @@ export default function HarvestSubmissionPage() {
               </div>
             </section>
 
-            {/* Planting Information */}
-            <section>
-              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Planting Information</h2>
+          {/* Planting Information */}
+          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center mb-5">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Planting Information</h2>
+            </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -380,9 +428,16 @@ export default function HarvestSubmissionPage() {
               </div>
             </section>
 
-            {/* Harvest Details */}
-            <section>
-              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Harvest Details</h2>
+          {/* Harvest Details */}
+          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center mb-5">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Harvest Details</h2>
+            </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -463,9 +518,16 @@ export default function HarvestSubmissionPage() {
               </div>
             </section>
 
-            {/* Quality & Grading */}
-            <section>
-              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Quality & Grading</h2>
+          {/* Quality & Grading */}
+          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center mb-5">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Quality & Grading</h2>
+            </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Fiber Grade</label>
@@ -520,9 +582,16 @@ export default function HarvestSubmissionPage() {
               </div>
             </section>
 
-            {/* Pest & Disease Observations */}
-            <section>
-              <h2 className="text-lg font-bold text-emerald-700 mb-3 pb-2 border-b-2 border-emerald-200">Pest & Disease Observations</h2>
+          {/* Pest & Disease Observations */}
+          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center mb-5">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Pest & Disease Observations</h2>
+            </div>
               <div className="space-y-4">
                 <div className="flex items-center">
                   <input
@@ -567,31 +636,52 @@ export default function HarvestSubmissionPage() {
               </div>
             </section>
 
-            {/* Remarks */}
-            <section>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Additional Remarks</label>
-              <textarea
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                placeholder="Any additional notes or observations..."
-              />
-            </section>
-
-            {/* Submit Button */}
-            <div className="flex gap-4 pt-4 border-t-2 border-gray-100">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 px-6 rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200"
-              >
-                {loading ? 'Submitting...' : 'Submit Harvest'}
-              </button>
+          {/* Remarks */}
+          <section className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+              </div>
+              <label className="text-xl font-bold text-gray-900">Additional Remarks</label>
             </div>
-          </form>
-        </div>
+            <textarea
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleChange}
+              rows={4}
+              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all"
+              placeholder="Any additional notes or observations..."
+            />
+          </section>
+
+          {/* Submit Button */}
+          <div className="flex gap-4 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-4 px-8 rounded-xl hover:shadow-2xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-bold text-lg transition-all duration-200 flex items-center justify-center gap-3"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Submit Harvest</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
