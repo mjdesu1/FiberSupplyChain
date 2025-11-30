@@ -76,14 +76,6 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess
       
       <div className="max-w-md w-full relative z-10">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-green-100">
-          {/* Back Button */}
-          <button
-            onClick={onBack}
-            className="mb-6 flex items-center text-gray-600 hover:text-green-700 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
           <div className="text-center mb-8">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
               <Users className="w-8 h-8 text-green-600" />

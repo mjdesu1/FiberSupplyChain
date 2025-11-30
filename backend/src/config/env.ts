@@ -12,7 +12,7 @@ export const config = {
   
   // JWT Configuration
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m', // Access token expiry
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30m', // Access token expiry (30 minutes)
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d', // Refresh token expiry
   
   // reCAPTCHA Configuration

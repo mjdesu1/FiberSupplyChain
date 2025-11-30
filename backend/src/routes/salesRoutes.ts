@@ -23,11 +23,16 @@ router.post('/submit-report', async (req: Request, res: Response) => {
       });
     }
     
-    // Validate and set abaca type with default
-    const validAbacaTypes = ['Tuxy', 'Superior', 'Medium', 'Low Grade'];
-    const abacaType = transactionDetails.abacaType && validAbacaTypes.includes(transactionDetails.abacaType) 
-      ? transactionDetails.abacaType 
-      : 'Tuxy';
+    // Validate abaca type is provided
+    if (!transactionDetails.abacaType || transactionDetails.abacaType.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Abaca type/grade is required'
+      });
+    }
+    
+    // Use the abaca type as provided (no default)
+    const abacaType = transactionDetails.abacaType.trim();
     
     // Validate and set payment method with default
     const validPaymentMethods = ['cash', 'bank_transfer', 'check', 'credit'];
@@ -502,6 +507,58 @@ router.put('/reports/:reportId/status', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update report status',
+      error: error.message
+    });
+  }
+});
+
+// Delete sales report (Farmer - only pending reports)
+router.delete('/delete-report/:reportId', async (req: Request, res: Response) => {
+  try {
+    const { reportId } = req.params;
+    
+    // First check if report exists and is pending
+    const { data: existingReport, error: fetchError } = await supabase
+      .from('sales_reports')
+      .select('status')
+      .eq('report_id', reportId)
+      .single();
+    
+    if (fetchError || !existingReport) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sales report not found'
+      });
+    }
+    
+    // Only allow deletion of pending reports
+    if (existingReport.status !== 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot delete approved or rejected reports'
+      });
+    }
+    
+    // Delete the report
+    const { error: deleteError } = await supabase
+      .from('sales_reports')
+      .delete()
+      .eq('report_id', reportId);
+    
+    if (deleteError) {
+      throw deleteError;
+    }
+    
+    res.json({
+      success: true,
+      message: 'Sales report deleted successfully'
+    });
+    
+  } catch (error: any) {
+    console.error('Error deleting report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete report',
       error: error.message
     });
   }

@@ -291,15 +291,17 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-50">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-white transition-all duration-300 flex flex-col shadow-2xl`}>
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-white transition-all duration-300 ease-in-out flex flex-col shadow-2xl overflow-hidden`}>
         {/* Logo */}
         <div className="p-6 flex items-center justify-between border-b border-slate-700">
-          {sidebarOpen && (
-            <div>
-              <h1 className="text-xl font-bold">🌾 Farmer Portal</h1>
-              <p className="text-xs text-blue-300">Abaca Management</p>
-            </div>
-          )}
+          <div className={`transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
+            {sidebarOpen && (
+              <div>
+                <h1 className="text-xl font-bold">Farmer Portal</h1>
+                <p className="text-xs text-blue-300">Abaca Management</p>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-slate-700 rounded-lg transition"
@@ -331,16 +333,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           </button>
 
           <button
-            onClick={() => setCurrentPage('harvest')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-              currentPage === 'harvest' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            }`}
-          >
-            <Package className="w-5 h-5" />
-            {sidebarOpen && <span>Harvest Records</span>}
-          </button>
-
-          <button
             onClick={() => setCurrentPage('monitoring')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
               currentPage === 'monitoring' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
@@ -348,19 +340,6 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           >
             <Calendar className="w-5 h-5" />
             {sidebarOpen && <span>Farm Monitoring</span>}
-          </button>
-
-          <button
-            onClick={() => {
-              setCurrentPage('sales-report');
-              setShowSalesForm(false);
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-              currentPage === 'sales-report' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
-            }`}
-          >
-            <FileText className="w-5 h-5" />
-            {sidebarOpen && <span>Sales Reports</span>}
           </button>
 
           <button
@@ -374,13 +353,16 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
           </button>
 
           <button
-            onClick={() => setCurrentPage('profile')}
+            onClick={() => {
+              setCurrentPage('sales-report');
+              setShowSalesForm(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-              currentPage === 'profile' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
+              currentPage === 'sales-report' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg' : 'hover:bg-slate-700'
             }`}
           >
-            <User className="w-5 h-5" />
-            {sidebarOpen && <span>My Profile</span>}
+            <FileText className="w-5 h-5" />
+            {sidebarOpen && <span>Sales Reports</span>}
           </button>
 
         </nav>

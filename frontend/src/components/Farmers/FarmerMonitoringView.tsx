@@ -31,7 +31,7 @@ const FarmerMonitoringView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState<MonitoringRecord | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'overdue' | 'completed' | 'ongoing' | 'done'>('all');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -130,6 +130,14 @@ const FarmerMonitoringView: React.FC = () => {
       console.log('🔍 Filtering for completed tab...');
       filtered = filtered.filter(r => (r as any).status === 'Completed');
       console.log(`✅ Completed filtered records: ${filtered.length}`);
+    } else if (activeTab === 'ongoing') {
+      console.log('🔍 Filtering for ongoing tab...');
+      filtered = filtered.filter(r => (r as any).status === 'Ongoing');
+      console.log(`✅ Ongoing filtered records: ${filtered.length}`);
+    } else if (activeTab === 'done') {
+      console.log('🔍 Filtering for done monitor tab...');
+      filtered = filtered.filter(r => (r as any).status === 'Completed');
+      console.log(`✅ Done monitor filtered records: ${filtered.length}`);
     }
 
     return filtered;
@@ -318,19 +326,55 @@ const FarmerMonitoringView: React.FC = () => {
           )}
         </button>
         <button
-          onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
+          onClick={() => { setActiveTab('ongoing'); setCurrentPage(1); }}
           className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-            activeTab === 'completed'
+            activeTab === 'ongoing'
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'ongoing' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'
+          }`}>
+            <Activity className="w-5 h-5" />
+          </div>
+          <span>Ongoing ({records.filter(r => (r as any).status === 'Ongoing').length})</span>
+          {activeTab === 'ongoing' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => { setActiveTab('done'); setCurrentPage(1); }}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'done'
               ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl shadow-green-500/50 scale-105'
               : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
           }`}
         >
           <div className={`p-2 rounded-lg transition-colors ${
-            activeTab === 'completed' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
+            activeTab === 'done' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'
           }`}>
             <CheckCircle className="w-5 h-5" />
           </div>
-          <span>Completed ({stats.completed})</span>
+          <span>Done Monitor ({stats.completed})</span>
+          {activeTab === 'done' && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
+          className={`group relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+            activeTab === 'completed'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
+              : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-white hover:shadow-lg border border-gray-200'
+          }`}
+        >
+          <div className={`p-2 rounded-lg transition-colors ${
+            activeTab === 'completed' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'
+          }`}>
+            <CheckCircle className="w-5 h-5" />
+          </div>
+          <span>Complete ({stats.completed})</span>
           {activeTab === 'completed' && (
             <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-white rounded-full"></div>
           )}

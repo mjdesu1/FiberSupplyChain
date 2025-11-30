@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, FileText, Send } from 'lucide-react';
 import { getUserData } from '../../utils/authToken';
 
 interface SalesReportFormProps {
   onSubmit: (report: any) => void;
   onCancel: () => void;
+  initialData?: any;
+  isEditMode?: boolean;
 }
 
-export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCancel }) => {
+export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCancel, initialData, isEditMode = false }) => {
   const [reportData, setReportData] = useState({
     reportPeriod: '',
     reportMonth: new Date().toISOString().slice(0, 7), // YYYY-MM format
@@ -17,7 +19,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
     buyerCompanyName: '',
     
     // Product Details
-    abacaType: 'Tuxy',
+    abacaType: '',
     quantitySold: 0,
     unitPrice: 0,
     totalAmount: 0,
@@ -34,6 +36,28 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
     qualityNotes: '',
     otherComments: ''
   });
+
+  // Populate form with initial data when editing
+  useEffect(() => {
+    if (isEditMode && initialData) {
+      setReportData({
+        reportPeriod: initialData.report_month || '',
+        reportMonth: initialData.report_month || new Date().toISOString().slice(0, 7),
+        dateOfSale: initialData.sale_date || new Date().toISOString().slice(0, 10),
+        buyerCompanyName: initialData.buyer_company_name || '',
+        abacaType: initialData.abaca_type || '',
+        quantitySold: initialData.quantity_sold || 0,
+        unitPrice: initialData.unit_price || 0,
+        totalAmount: initialData.total_amount || 0,
+        paymentMethod: initialData.payment_method || 'cash',
+        paymentStatus: initialData.payment_status || 'paid',
+        deliveryLocation: initialData.delivery_location || '',
+        shippingFee: initialData.shipping_fee || 0,
+        qualityNotes: initialData.quality_notes || '',
+        otherComments: initialData.other_comments || ''
+      });
+    }
+  }, [isEditMode, initialData]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,9 +133,8 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
         return;
       }
       
-      // Ensure abacaType is one of the valid values
-      const validAbacaTypes = ['Tuxy', 'Superior', 'Medium', 'Low Grade'];
-      const abacaType = validAbacaTypes.includes(reportData.abacaType) ? reportData.abacaType : 'Tuxy';
+      // Use the abaca type as entered by the farmer
+      const abacaType = reportData.abacaType.trim();
       
       // Prepare comprehensive transaction data for the new API format
       const reportPayload = {
@@ -230,6 +253,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                 type="text"
                 value={reportData.buyerCompanyName}
                 onChange={(e) => setReportData({ ...reportData, buyerCompanyName: e.target.value })}
+                onFocus={(e) => e.target.select()}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 placeholder="Buyer name or company"
               />
@@ -251,13 +275,15 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Abaca Type/Grade</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Abaca Type/Grade *</label>
               <input
                 type="text"
                 value={reportData.abacaType}
                 onChange={(e) => setReportData({ ...reportData, abacaType: e.target.value })}
+                onFocus={(e) => e.target.select()}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
-                placeholder="e.g., Tuxy, Superior, Medium"
+                placeholder="e.g., Tuxy, Superior, Medium, Low Grade"
+                required
               />
             </div>
             <div>
