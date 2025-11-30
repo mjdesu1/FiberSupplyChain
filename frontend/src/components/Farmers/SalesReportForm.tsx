@@ -38,6 +38,33 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate numeric fields to prevent database overflow
+    // Database limit: precision 10, scale 2 = max 99,999,999.99
+    const MAX_NUMERIC_VALUE = 99999999.99;
+    
+    if (reportData.quantitySold > MAX_NUMERIC_VALUE) {
+      alert(`Quantity sold cannot exceed ${MAX_NUMERIC_VALUE.toLocaleString()} kg`);
+      return;
+    }
+    
+    if (reportData.unitPrice > MAX_NUMERIC_VALUE) {
+      alert(`Unit price cannot exceed ₱${MAX_NUMERIC_VALUE.toLocaleString()}`);
+      return;
+    }
+    
+    if (reportData.totalAmount > MAX_NUMERIC_VALUE) {
+      alert(`Total amount cannot exceed ₱${MAX_NUMERIC_VALUE.toLocaleString()}`);
+      return;
+    }
+    
+    if (reportData.shippingFee && reportData.shippingFee > MAX_NUMERIC_VALUE) {
+      alert(`Shipping fee cannot exceed ₱${MAX_NUMERIC_VALUE.toLocaleString()}`);
+      return;
+    }
+    
+    console.log('📝 Form submitted with data:', reportData);
+
     if (!reportData.quantitySold || !reportData.unitPrice) {
       alert('Please enter quantity sold and unit price');
       return;
@@ -238,6 +265,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
               <input
                 type="number"
                 step="0.1"
+                max="99999999.99"
                 value={reportData.quantitySold || ''}
                 onChange={(e) => {
                   const quantity = parseFloat(e.target.value) || 0;
@@ -255,6 +283,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
               <input
                 type="number"
                 step="0.01"
+                max="99999999.99"
                 value={reportData.unitPrice || ''}
                 onChange={(e) => {
                   const price = parseFloat(e.target.value) || 0;
@@ -295,7 +324,7 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Payment Method</label>
               <select
@@ -329,17 +358,6 @@ export const SalesReportForm: React.FC<SalesReportFormProps> = ({ onSubmit, onCa
                 onChange={(e) => setReportData({ ...reportData, deliveryLocation: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm"
                 placeholder="Delivery address"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Transportation Cost (₱)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={reportData.shippingFee || ''}
-                onChange={(e) => setReportData({ ...reportData, shippingFee: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm"
-                placeholder="0.00"
               />
             </div>
           </div>
