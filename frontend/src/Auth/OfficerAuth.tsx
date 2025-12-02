@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Users, ArrowLeft } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { apiUrl } from '../config/api';
 
 interface OfficerAuthProps {
   onBack: () => void;
@@ -33,7 +32,7 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess
       // Get reCAPTCHA v3 token (invisible)
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch(apiUrl('/api/auth/login'), {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

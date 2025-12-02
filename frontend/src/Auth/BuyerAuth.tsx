@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Building2, ArrowLeft, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, Award } from 'lucide-react';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { completeLogin } from '../utils/authToken';
-import { apiUrl } from '../config/api';
 
 interface BuyerAuthProps {
   onBack: () => void;
@@ -84,7 +83,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch(apiUrl('/api/auth/login'), {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +161,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
       const recaptchaToken = await executeRecaptcha('register');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch(apiUrl('/api/auth/register/buyer'), {
+      const response = await fetch('http://localhost:3001/api/auth/register/buyer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),

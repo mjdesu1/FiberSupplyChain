@@ -48,15 +48,13 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 ---
 
-## 📱 After Frontend Deployment:
-
-You'll have these URLs:
+## 📱 Deployed URLs:
 
 | Service | URL | Purpose |
 |---------|-----|---------|
 | **Backend API** | `https://fiber-supply-chain.vercel.app` | API Server ✅ |
-| **Frontend Main** | `https://your-frontend.vercel.app` | Homepage |
-| **MAO Login** | `https://your-frontend.vercel.app/mao` | MAO Officer Login |
+| **Frontend Main** | `https://fiber-supply-chain-args.vercel.app` | Homepage ✅ |
+| **MAO Login** | `https://fiber-supply-chain-args.vercel.app/mao` | MAO Officer Login ✅ |
 
 ---
 

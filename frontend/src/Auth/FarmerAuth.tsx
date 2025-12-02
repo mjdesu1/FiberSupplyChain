@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { User, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, ArrowLeft } from 'lucide-react';
-import { apiUrl } from '../config/api';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
@@ -77,7 +76,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch(apiUrl('/api/auth/login'), {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -155,7 +154,7 @@ export const FarmerAuth: React.FC<FarmerAuthProps> = ({ onBack, onLoginSuccess }
       const recaptchaToken = await executeRecaptcha('register');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch(apiUrl('/api/auth/register/farmer'), {
+      const response = await fetch('http://localhost:3001/api/auth/register/farmer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),
