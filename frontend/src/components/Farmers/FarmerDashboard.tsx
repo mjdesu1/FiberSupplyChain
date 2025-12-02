@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   LayoutDashboard,
   Sprout,
@@ -110,7 +111,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     try {
       const token = localStorage.getItem('accessToken');
       // Use the new association seedlings endpoint
-      const response = await fetch('http://localhost:3001/api/association-seedlings/farmer/received', {
+      const response = await fetch('${API_BASE_URL}/api/association-seedlings/farmer/received', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -136,7 +137,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     setLoadingProfile(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/auth/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -168,7 +169,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     try {
       const token = localStorage.getItem('accessToken');
       
-      const response = await fetch(`http://localhost:3001/api/farmers/profile`, {
+      const response = await fetch(`${API_BASE_URL}/api/farmers/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -250,7 +251,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/association-seedlings/farmer/${selectedSeedling.distribution_id}/mark-planted`, {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/farmer/${selectedSeedling.distribution_id}/mark-planted`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

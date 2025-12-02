@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   Users,
   Plus,
@@ -47,7 +48,7 @@ const TeamManagement: React.FC = () => {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/team');
+      const response = await fetch('${API_BASE_URL}/api/team');
       const data = await response.json();
       setTeam(data.team || []);
     } catch (error) {
@@ -119,8 +120,8 @@ const TeamManagement: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = editingMember
-        ? `http://localhost:3001/api/team/${editingMember.member_id}`
-        : 'http://localhost:3001/api/team';
+        ? `${API_BASE_URL}/api/team/${editingMember.member_id}`
+        : '${API_BASE_URL}/api/team';
       
       const method = editingMember ? 'PUT' : 'POST';
 
@@ -152,7 +153,7 @@ const TeamManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/team/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/team/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

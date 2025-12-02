@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   BookOpen,
   Plus,
@@ -43,7 +44,7 @@ const ArticleManagement: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/articles');
+      const response = await fetch('${API_BASE_URL}/api/articles');
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {
@@ -115,8 +116,8 @@ const ArticleManagement: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = editingArticle
-        ? `http://localhost:3001/api/articles/${editingArticle.article_id}`
-        : 'http://localhost:3001/api/articles';
+        ? `${API_BASE_URL}/api/articles/${editingArticle.article_id}`
+        : '${API_BASE_URL}/api/articles';
       
       const method = editingArticle ? 'PUT' : 'POST';
 
@@ -148,7 +149,7 @@ const ArticleManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/articles/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

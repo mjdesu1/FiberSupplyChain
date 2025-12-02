@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   Sprout, 
   Search, 
@@ -79,7 +80,7 @@ const PlantingMonitor: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/seedlings/all?status=planted', {
+      const response = await fetch('${API_BASE_URL}/api/seedlings/all?status=planted', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

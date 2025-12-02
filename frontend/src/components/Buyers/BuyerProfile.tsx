@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   User, 
   Phone, 
@@ -60,7 +61,7 @@ const BuyerProfile: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
-      const response = await fetch(`http://localhost:3001/api/buyers/profile/${user.user_id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/buyers/profile/${user.user_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -84,7 +85,7 @@ const BuyerProfile: React.FC = () => {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyers/update-profile', {
+      const response = await fetch('${API_BASE_URL}/api/buyers/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

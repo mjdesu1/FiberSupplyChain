@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { FileText, Calendar, Banknote, Package, Plus, Search, Edit, Trash2, Eye, X, Filter, CheckCircle, Clock } from 'lucide-react';
 import SalesReportForm from './SalesReportForm';
 import { getUserData } from '../../utils/authToken';
@@ -71,7 +72,7 @@ export const SalesReportsList: React.FC<SalesReportsListProps> = () => {
       }
       
       console.log('✅ Using farmer ID:', farmerId);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const apiUrl = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
       const response = await fetch(`${apiUrl}/api/sales/farmer-reports/${farmerId}`);
       
       if (!response.ok) {

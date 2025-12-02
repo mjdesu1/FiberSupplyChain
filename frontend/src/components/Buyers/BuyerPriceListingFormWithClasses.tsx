@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   DollarSign, 
   Phone, 
@@ -155,7 +156,7 @@ const BuyerPriceListingFormWithClasses: React.FC = () => {
         availability: formData.availability
       };
 
-      const response = await fetch('http://localhost:3001/api/buyer-listings/create', {
+      const response = await fetch('${API_BASE_URL}/api/buyer-listings/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

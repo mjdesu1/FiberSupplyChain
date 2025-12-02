@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   Package, 
   Search, 
@@ -71,7 +72,7 @@ const CUSAFAInventory: React.FC = () => {
   const fetchInventory = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/cusafa-inventory', {
+      const response = await fetch('${API_BASE_URL}/api/cusafa-inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -93,7 +94,7 @@ const CUSAFAInventory: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       console.log('🔍 Fetching buyers from API...');
       
-      const response = await fetch('http://localhost:3001/api/buyers/all', {
+      const response = await fetch('${API_BASE_URL}/api/buyers/all', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -124,7 +125,7 @@ const CUSAFAInventory: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/fiber-deliveries/create', {
+      const response = await fetch('${API_BASE_URL}/api/fiber-deliveries/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -311,7 +312,7 @@ const CUSAFAInventory: React.FC = () => {
                       // Auto-fetch farmer contact from database
                       try {
                         const token = localStorage.getItem('accessToken');
-                        const response = await fetch(`http://localhost:3001/api/users/farmer/${item.farmer_id}`, {
+                        const response = await fetch(`${API_BASE_URL}/api/users/farmer/${item.farmer_id}`, {
                           headers: { Authorization: `Bearer ${token}` }
                         });
                         if (response.ok) {

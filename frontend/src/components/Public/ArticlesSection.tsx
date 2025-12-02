@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { BookOpen, Calendar, Eye, ArrowRight } from 'lucide-react';
 
 interface Article {
@@ -23,7 +24,7 @@ const ArticlesSection: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/articles');
+      const response = await fetch('${API_BASE_URL}/api/articles');
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {

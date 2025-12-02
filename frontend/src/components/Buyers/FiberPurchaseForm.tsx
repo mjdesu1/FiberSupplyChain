@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Upload, X, Plus, Package, CheckCircle, User, Leaf, Phone } from 'lucide-react';
 
 interface PurchaseFormData {
@@ -78,7 +79,7 @@ const FiberPurchaseForm: React.FC = () => {
         imageUrl: null // TODO: Handle image upload separately if needed
       };
 
-      const response = await fetch('http://localhost:3001/api/buyer-purchases', {
+      const response = await fetch('${API_BASE_URL}/api/buyer-purchases', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

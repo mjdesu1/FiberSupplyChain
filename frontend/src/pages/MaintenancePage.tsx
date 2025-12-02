@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { Wrench, WifiOff, Shield, X, Mail } from 'lucide-react';
@@ -42,7 +43,7 @@ const MaintenancePage: React.FC = () => {
     try {
       console.log('Attempting login with:', { email, userType: 'officer' });
 
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch('${API_BASE_URL}/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

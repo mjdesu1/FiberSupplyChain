@@ -3,6 +3,7 @@
  * Shows detailed planted records from farmers in table format
  */
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Sprout, Calendar, MapPin, User, Search, Filter, Camera, Eye, X } from 'lucide-react';
 
 interface PlantedSeedling {
@@ -44,7 +45,7 @@ const PlantedSeedlings: React.FC = () => {
     setError(null);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/association-seedlings/cusafa/all-distributions', {
+      const response = await fetch('${API_BASE_URL}/api/association-seedlings/cusafa/all-distributions', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

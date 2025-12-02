@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -42,7 +43,7 @@ const BuyerAnalytics: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/buyer-purchases/analytics?year=${selectedYear}&month=${selectedMonth}`,
+        `${API_BASE_URL}/api/buyer-purchases/analytics?year=${selectedYear}&month=${selectedMonth}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       

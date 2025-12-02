@@ -16,6 +16,13 @@ import MaintenanceChecker from './components/MaintenanceChecker';
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
+// Debug logging
+console.log('=== reCAPTCHA Debug ===');
+console.log('VITE_RECAPTCHA_SITE_KEY:', import.meta.env.VITE_RECAPTCHA_SITE_KEY);
+console.log('RECAPTCHA_SITE_KEY:', RECAPTCHA_SITE_KEY);
+console.log('Key loaded?', RECAPTCHA_SITE_KEY ? 'YES ' : 'NO ');
+console.log('=======================');
+
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredUserType?: string }> = ({ 
   children, 

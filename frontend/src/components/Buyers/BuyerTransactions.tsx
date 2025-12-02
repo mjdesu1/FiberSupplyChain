@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Search, Filter, Download, Eye, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 
 interface Transaction {
@@ -34,7 +35,7 @@ const BuyerTransactions: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/buyer-purchases/transactions?status=${statusFilter}`,
+        `${API_BASE_URL}/api/buyer-purchases/transactions?status=${statusFilter}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();

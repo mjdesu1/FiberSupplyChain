@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   Package, 
   Search, 
@@ -99,7 +100,7 @@ const AssociationInventory: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/association-seedlings/association/received', {
+      const response = await fetch('${API_BASE_URL}/api/association-seedlings/association/received', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -134,7 +135,7 @@ const AssociationInventory: React.FC = () => {
         throw new Error('Authentication token missing');
       }
 
-      const response = await fetch('http://localhost:3001/api/association-seedlings/association/farmers', {
+      const response = await fetch('${API_BASE_URL}/api/association-seedlings/association/farmers', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -251,7 +252,7 @@ const AssociationInventory: React.FC = () => {
       }
 
       const response = await fetch(
-        'http://localhost:3001/api/association-seedlings/association/distribute-to-farmers',
+        '${API_BASE_URL}/api/association-seedlings/association/distribute-to-farmers',
         {
           method: 'POST',
           headers: {
@@ -292,7 +293,7 @@ const AssociationInventory: React.FC = () => {
       }
 
       const response = await fetch(
-        `http://localhost:3001/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
+        `${API_BASE_URL}/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
         {
           method: 'PUT',
           headers: {
@@ -1071,7 +1072,7 @@ const AssociationInventory: React.FC = () => {
                   try {
                     const token = localStorage.getItem('accessToken');
                     const response = await fetch(
-                      `http://localhost:3001/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
+                      `${API_BASE_URL}/api/association-seedlings/association/received/${selectedDistribution.distribution_id}`,
                       {
                         method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }

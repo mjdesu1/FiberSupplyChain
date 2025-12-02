@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { User, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, ArrowLeft } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
 
 interface FarmerAuthProps {
   onBack: () => void;

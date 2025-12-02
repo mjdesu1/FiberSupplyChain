@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   LayoutDashboard,
   Package,
@@ -70,10 +71,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       }
 
       const [associationRes, farmerRes] = await Promise.all([
-        fetch('http://localhost:3001/api/association-seedlings/association/received', {
+        fetch('${API_BASE_URL}/api/association-seedlings/association/received', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:3001/api/association-seedlings/association/farmer-distributions', {
+        fetch('${API_BASE_URL}/api/association-seedlings/association/farmer-distributions', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

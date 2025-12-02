@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   Download, 
   CheckCircle, 
@@ -165,7 +166,7 @@ export default function MAOHarvestVerificationPage() {
       const statusParam = filter !== 'all' ? `?status=${encodeURIComponent(filter)}` : '';
       
       // Use the correct endpoint for MAO officers
-      const endpoint = `http://localhost:3001/api/harvests/mao/harvests${statusParam}`;
+      const endpoint = `${API_BASE_URL}/api/harvests/mao/harvests${statusParam}`;
       
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -185,7 +186,7 @@ export default function MAOHarvestVerificationPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/harvests/mao/harvests/statistics', {
+      const response = await fetch('${API_BASE_URL}/api/harvests/mao/harvests/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -234,7 +235,7 @@ export default function MAOHarvestVerificationPage() {
 
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/harvests/mao/harvests/${selectedHarvest.harvest_id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/mao/harvests/${selectedHarvest.harvest_id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -270,7 +271,7 @@ export default function MAOHarvestVerificationPage() {
 
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/harvests/${harvestId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/${harvestId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -299,7 +300,7 @@ export default function MAOHarvestVerificationPage() {
       const endpoint = actionType === 'verify' ? 'verify' : 'reject';
       
       const response = await fetch(
-        `http://localhost:3001/api/harvests/mao/harvests/${selectedHarvest.harvest_id}/${endpoint}`,
+        `${API_BASE_URL}/api/harvests/mao/harvests/${selectedHarvest.harvest_id}/${endpoint}`,
         {
           method: 'POST',
           headers: {

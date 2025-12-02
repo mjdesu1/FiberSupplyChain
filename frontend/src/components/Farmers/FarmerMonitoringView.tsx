@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   Calendar,
   Eye,
@@ -158,7 +159,7 @@ const FarmerMonitoringView: React.FC = () => {
       setLoading(true);
       
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/farmers/monitoring', {
+      const response = await fetch('${API_BASE_URL}/api/farmers/monitoring', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

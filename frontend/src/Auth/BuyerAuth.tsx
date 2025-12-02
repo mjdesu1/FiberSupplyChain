@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Building2, ArrowLeft, ChevronRight, ChevronLeft, Upload, X, Camera, FileText, Award } from 'lucide-react';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { completeLogin } from '../utils/authToken';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
 
 interface BuyerAuthProps {
   onBack: () => void;

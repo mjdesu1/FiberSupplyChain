@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+import { API_BASE_URL } from '../config/api';
 interface Harvest {
   harvest_id: string;
   harvest_date: string;
@@ -56,7 +57,7 @@ export default function SuperAdminHarvestDashboard() {
       if (filters.barangay) params.append('barangay', filters.barangay);
       
       const queryString = params.toString();
-      const url = `http://localhost:3001/api/harvests/admin/harvests/all${queryString ? '?' + queryString : ''}`;
+      const url = `${API_BASE_URL}/api/harvests/admin/harvests/all${queryString ? '?' + queryString : ''}`;
       
       console.log('🔍 Fetching harvests from:', url);
       console.log('🔍 With filters:', filters);
@@ -87,7 +88,7 @@ export default function SuperAdminHarvestDashboard() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/harvests/mao/harvests/statistics', {
+      const response = await fetch('${API_BASE_URL}/api/harvests/mao/harvests/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

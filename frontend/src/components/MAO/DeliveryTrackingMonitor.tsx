@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   Truck, Package, CheckCircle, XCircle, User,
   DollarSign, Download, Search, Eye, Leaf, Award
@@ -57,7 +58,7 @@ const DeliveryTrackingMonitor: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const statusParam = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-      const response = await fetch(`http://localhost:3001/api/fiber-deliveries/all${statusParam}`, {
+      const response = await fetch(`${API_BASE_URL}/api/fiber-deliveries/all${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();

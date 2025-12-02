@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   Package,
   TrendingUp,
@@ -116,7 +117,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const statusParam = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-      const response = await fetch(`http://localhost:3001/api/fiber-deliveries/farmer/my-deliveries${statusParam}`, {
+      const response = await fetch(`${API_BASE_URL}/api/fiber-deliveries/farmer/my-deliveries${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -131,7 +132,7 @@ const FiberDeliveryManager: React.FC = () => {
   const fetchFiberInventory = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/cusafa-inventory', {
+      const response = await fetch('${API_BASE_URL}/api/cusafa-inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -148,7 +149,7 @@ const FiberDeliveryManager: React.FC = () => {
       
       console.log('🔍 Fetching buyers from API...');
       
-      const response = await fetch('http://localhost:3001/api/buyers/all', {
+      const response = await fetch('${API_BASE_URL}/api/buyers/all', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -187,8 +188,8 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const url = isEditMode && selectedDelivery
-        ? `http://localhost:3001/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
-        : 'http://localhost:3001/api/fiber-deliveries/create';
+        ? `${API_BASE_URL}/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
+        : '${API_BASE_URL}/api/fiber-deliveries/create';
       
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -251,7 +252,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`,
+        `${API_BASE_URL}/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
@@ -282,7 +283,7 @@ const FiberDeliveryManager: React.FC = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:3001/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
+        `${API_BASE_URL}/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}/cancel`,
         {
           method: 'POST',
           headers: {

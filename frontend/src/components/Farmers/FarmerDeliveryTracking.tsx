@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   Truck, Package, CheckCircle, XCircle, User,
   DollarSign, Download, Search, Eye, Leaf, Award
@@ -58,7 +59,7 @@ const FarmerDeliveryTracking: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const statusParam = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
       // Use farmer-specific endpoint to get only their deliveries
-      const response = await fetch(`http://localhost:3001/api/fiber-deliveries/farmer/my-deliveries${statusParam}`, {
+      const response = await fetch(`${API_BASE_URL}/api/fiber-deliveries/farmer/my-deliveries${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Activity, Shield, Ban, Search, Eye, Globe, Monitor, CheckCircle, XCircle, Clock, RefreshCw, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import axios from 'axios';
 
@@ -18,7 +19,7 @@ const ActivityLogsManagement: React.FC = () => {
   const [blockType, setBlockType] = useState<'ip' | 'mac'>('ip');
   const [blockForm, setBlockForm] = useState({ address: '', reason: '', isPermanent: false, expiresAt: '', notes: '' });
 
-  const API_URL = 'http://localhost:3001/api';
+  const API_URL = '${API_BASE_URL}/api';
 
   useEffect(() => {
     if (activeTab === 'logs') fetchActivityLogs();

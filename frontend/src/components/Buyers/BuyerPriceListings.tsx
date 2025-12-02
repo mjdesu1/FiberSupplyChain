@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   DollarSign, 
   Package, 
@@ -49,7 +50,7 @@ const BuyerPriceListings: React.FC = () => {
   const fetchListings = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/buyer-listings', {
+      const response = await fetch('${API_BASE_URL}/api/buyer-listings', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -66,7 +67,7 @@ const BuyerPriceListings: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/buyer-listings/${listingId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-listings/${listingId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

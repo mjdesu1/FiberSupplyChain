@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Wrench, AlertTriangle, CheckCircle, Clock, Power, Shield, Users, Activity } from 'lucide-react';
 
 const MaintenanceToggle: React.FC = () => {
@@ -14,7 +15,7 @@ const MaintenanceToggle: React.FC = () => {
 
   const fetchMaintenanceStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/maintenance/status');
+      const response = await fetch('${API_BASE_URL}/api/maintenance/status');
       const data = await response.json();
       setIsMaintenanceMode(data.maintenanceMode);
       setLoading(false);
@@ -33,7 +34,7 @@ const MaintenanceToggle: React.FC = () => {
     setToggling(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:3001/api/maintenance/toggle', {
+      const response = await fetch('${API_BASE_URL}/api/maintenance/toggle', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { 
   Users, 
   ShoppingCart, 
@@ -87,11 +88,11 @@ const UserManagement: React.FC = () => {
       
       let endpoint = '';
       if (activeTab === 'farmers') {
-        endpoint = 'http://localhost:3001/api/mao/farmers';
+        endpoint = '${API_BASE_URL}/api/mao/farmers';
       } else if (activeTab === 'buyers') {
-        endpoint = 'http://localhost:3001/api/mao/buyers-list';
+        endpoint = '${API_BASE_URL}/api/mao/buyers-list';
       } else if (activeTab === 'associations') {
-        endpoint = 'http://localhost:3001/api/mao/association-officers';
+        endpoint = '${API_BASE_URL}/api/mao/association-officers';
       }
 
       const response = await fetch(endpoint, {
@@ -120,11 +121,11 @@ const UserManagement: React.FC = () => {
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${userId}`;
+        endpoint = `${API_BASE_URL}/api/mao/farmers/${userId}`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${userId}`;
+        endpoint = `${API_BASE_URL}/api/mao/buyers/${userId}`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${userId}`;
+        endpoint = `${API_BASE_URL}/api/mao/association-officers/${userId}`;
       }
 
       const response = await fetch(endpoint, {
@@ -150,11 +151,11 @@ const UserManagement: React.FC = () => {
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${userId}/verify`;
+        endpoint = `${API_BASE_URL}/api/mao/farmers/${userId}/verify`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${userId}/verify`;
+        endpoint = `${API_BASE_URL}/api/mao/buyers/${userId}/verify`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${userId}/verify`;
+        endpoint = `${API_BASE_URL}/api/mao/association-officers/${userId}/verify`;
       }
 
       const response = await fetch(endpoint, {
@@ -188,11 +189,11 @@ const UserManagement: React.FC = () => {
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${selectedUser.id}/reject`;
+        endpoint = `${API_BASE_URL}/api/mao/farmers/${selectedUser.id}/reject`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${selectedUser.id}/reject`;
+        endpoint = `${API_BASE_URL}/api/mao/buyers/${selectedUser.id}/reject`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${selectedUser.id}/reject`;
+        endpoint = `${API_BASE_URL}/api/mao/association-officers/${selectedUser.id}/reject`;
       }
 
       const response = await fetch(endpoint, {
@@ -227,11 +228,11 @@ const UserManagement: React.FC = () => {
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${userId}`;
+        endpoint = `${API_BASE_URL}/api/mao/farmers/${userId}`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${userId}`;
+        endpoint = `${API_BASE_URL}/api/mao/buyers/${userId}`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${userId}`;
+        endpoint = `${API_BASE_URL}/api/mao/association-officers/${userId}`;
       }
 
       const response = await fetch(endpoint, {
@@ -259,11 +260,11 @@ const UserManagement: React.FC = () => {
       let endpoint = '';
       
       if (activeTab === 'farmers') {
-        endpoint = `http://localhost:3001/api/mao/farmers/${selectedUser.id}`;
+        endpoint = `${API_BASE_URL}/api/mao/farmers/${selectedUser.id}`;
       } else if (activeTab === 'buyers') {
-        endpoint = `http://localhost:3001/api/mao/buyers/${selectedUser.id}`;
+        endpoint = `${API_BASE_URL}/api/mao/buyers/${selectedUser.id}`;
       } else if (activeTab === 'associations') {
-        endpoint = `http://localhost:3001/api/mao/association-officers/${selectedUser.id}`;
+        endpoint = `${API_BASE_URL}/api/mao/association-officers/${selectedUser.id}`;
       }
 
       const response = await fetch(endpoint, {

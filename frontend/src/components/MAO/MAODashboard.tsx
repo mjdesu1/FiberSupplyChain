@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import {
   LayoutDashboard,
   UserCheck,
@@ -83,7 +84,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
     setLoadingProfile(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:3001/api/auth/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -150,7 +151,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         profilePicture: profilePhoto
       });
       
-      const response = await fetch(`http://localhost:3001/api/mao/complete-profile`, {
+      const response = await fetch(`${API_BASE_URL}/api/mao/complete-profile`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -207,7 +208,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         setProfilePhoto(base64String);
         
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`http://localhost:3001/api/mao/complete-profile`, {
+        const response = await fetch(`${API_BASE_URL}/api/mao/complete-profile`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -304,25 +305,25 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       
       // Fetch production data
-      const productionRes = await fetch('http://localhost:3001/api/admin/production-report', {
+      const productionRes = await fetch('${API_BASE_URL}/api/admin/production-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const productionData = await productionRes.json();
 
       // Fetch sales data
-      const salesRes = await fetch('http://localhost:3001/api/admin/sales-report', {
+      const salesRes = await fetch('${API_BASE_URL}/api/admin/sales-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const salesData = await salesRes.json();
 
       // Fetch users data
-      const usersRes = await fetch('http://localhost:3001/api/admin/users-report', {
+      const usersRes = await fetch('${API_BASE_URL}/api/admin/users-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const usersData = await usersRes.json();
 
       // Fetch delivery data
-      const deliveriesRes = await fetch('http://localhost:3001/api/fiber-deliveries/all', {
+      const deliveriesRes = await fetch('${API_BASE_URL}/api/fiber-deliveries/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const deliveriesData = await deliveriesRes.json();
@@ -346,7 +347,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       try {
         // Fetch seedling distributions for monthly data
-        const associationDistRes = await fetch('http://localhost:3001/api/association-seedlings/mao/associations', {
+        const associationDistRes = await fetch('${API_BASE_URL}/api/association-seedlings/mao/associations', {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -374,7 +375,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         
         // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
         try {
-          const farmerDistRes = await fetch('http://localhost:3001/api/association-seedlings/cusafa/all-distributions', {
+          const farmerDistRes = await fetch('${API_BASE_URL}/api/association-seedlings/cusafa/all-distributions', {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -416,7 +417,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let totalMonitoring = 0;
       
       try {
-        const monitoringRes = await fetch('http://localhost:3001/api/mao/monitoring', {
+        const monitoringRes = await fetch('${API_BASE_URL}/api/mao/monitoring', {
           headers: { Authorization: `Bearer ${token}` }
         });
         

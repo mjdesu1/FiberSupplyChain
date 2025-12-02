@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { Globe, User } from 'lucide-react';
 
 interface InventoryItem {
@@ -55,8 +56,8 @@ export default function MAOInventoryPage() {
       
       // Use different endpoint based on view mode
       const endpoint = (isSuperAdmin && viewMode === 'all')
-        ? `http://localhost:3001/api/inventory/admin/inventory/all${statusParam}`
-        : `http://localhost:3001/api/inventory/inventory${statusParam}`;
+        ? `${API_BASE_URL}/api/inventory/admin/inventory/all${statusParam}`
+        : `${API_BASE_URL}/api/inventory/inventory${statusParam}`;
       
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -76,7 +77,7 @@ export default function MAOInventoryPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/inventory/inventory/statistics', {
+      const response = await fetch('${API_BASE_URL}/api/inventory/inventory/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
