@@ -76,7 +76,7 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({ onComplete }) => 
         });
       }
       
-      const response = await fetch('${API_BASE_URL}/api/mao/complete-profile', {
+      const response = await fetch(`${API_BASE_URL}/api/mao/complete-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

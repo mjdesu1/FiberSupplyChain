@@ -19,7 +19,7 @@ const ActivityLogsManagement: React.FC = () => {
   const [blockType, setBlockType] = useState<'ip' | 'mac'>('ip');
   const [blockForm, setBlockForm] = useState({ address: '', reason: '', isPermanent: false, expiresAt: '', notes: '' });
 
-  const API_URL = '${API_BASE_URL}/api';
+  const API_URL = `${API_BASE_URL}/api';
 
   useEffect(() => {
     if (activeTab === 'logs') fetchActivityLogs();
@@ -36,7 +36,7 @@ const ActivityLogsManagement: React.FC = () => {
       if (searchTerm) params.search = searchTerm;
       if (userTypeFilter) params.userType = userTypeFilter;
       if (actionTypeFilter) params.actionType = actionTypeFilter;
-      const response = await axios.get(`${API_URL}/activity-logs`, { headers: getAuthHeaders(), params });
+      const response = await axios.get(`${API_BASE_URL}/activity-logs`, { headers: getAuthHeaders(), params });
       setLogs(response.data.logs);
       setTotalPages(response.data.pagination.totalPages);
       setTotalLogs(response.data.pagination.total);
@@ -50,7 +50,7 @@ const ActivityLogsManagement: React.FC = () => {
   const fetchBlockedIPs = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/activity-logs/blocked/ips`, { headers: getAuthHeaders() });
+      const response = await axios.get(`${API_BASE_URL}/activity-logs/blocked/ips`, { headers: getAuthHeaders() });
       setBlockedIPs(response.data.blockedIPs);
     } catch (error) {
       console.error('Error fetching blocked IPs:', error);
@@ -62,7 +62,7 @@ const ActivityLogsManagement: React.FC = () => {
   const fetchBlockedMACs = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/activity-logs/blocked/macs`, { headers: getAuthHeaders() });
+      const response = await axios.get(`${API_BASE_URL}/activity-logs/blocked/macs`, { headers: getAuthHeaders() });
       setBlockedMACs(response.data.blockedMACs);
     } catch (error) {
       console.error('Error fetching blocked MACs:', error);
@@ -77,7 +77,7 @@ const ActivityLogsManagement: React.FC = () => {
       return;
     }
     try {
-      const endpoint = blockType === 'ip' ? `${API_URL}/activity-logs/blocked/ips` : `${API_URL}/activity-logs/blocked/macs`;
+      const endpoint = blockType === 'ip' ? `${API_BASE_URL}/activity-logs/blocked/ips` : `${API_BASE_URL}/activity-logs/blocked/macs`;
       const payload = {
         [blockType === 'ip' ? 'ipAddress' : 'macAddress']: blockForm.address,
         reason: blockForm.reason,
@@ -99,7 +99,7 @@ const ActivityLogsManagement: React.FC = () => {
   const handleUnblock = async (blockId: string, type: 'ip' | 'mac') => {
     if (!confirm(`Are you sure you want to unblock this ${type.toUpperCase()} address?`)) return;
     try {
-      await axios.put(`${API_URL}/activity-logs/blocked/${type}s/${blockId}`, { reason: 'Unblocked by admin' }, { headers: getAuthHeaders() });
+      await axios.put(`${API_BASE_URL}/activity-logs/blocked/${type}s/${blockId}`, { reason: 'Unblocked by admin' }, { headers: getAuthHeaders() });
       alert(`${type.toUpperCase()} address unblocked successfully`);
       if (type === 'ip') fetchBlockedIPs();
       else fetchBlockedMACs();

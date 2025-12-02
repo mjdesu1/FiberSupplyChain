@@ -43,7 +43,7 @@ const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ onLogout }) => {
   const fetchBuyerProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/buyers/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/buyers/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();

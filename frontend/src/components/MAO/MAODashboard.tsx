@@ -305,25 +305,25 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       const token = localStorage.getItem('accessToken');
       
       // Fetch production data
-      const productionRes = await fetch('${API_BASE_URL}/api/admin/production-report', {
+      const productionRes = await fetch(`${API_BASE_URL}/api/admin/production-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const productionData = await productionRes.json();
 
       // Fetch sales data
-      const salesRes = await fetch('${API_BASE_URL}/api/admin/sales-report', {
+      const salesRes = await fetch(`${API_BASE_URL}/api/admin/sales-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const salesData = await salesRes.json();
 
       // Fetch users data
-      const usersRes = await fetch('${API_BASE_URL}/api/admin/users-report', {
+      const usersRes = await fetch(`${API_BASE_URL}/api/admin/users-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const usersData = await usersRes.json();
 
       // Fetch delivery data
-      const deliveriesRes = await fetch('${API_BASE_URL}/api/fiber-deliveries/all', {
+      const deliveriesRes = await fetch(`${API_BASE_URL}/api/fiber-deliveries/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const deliveriesData = await deliveriesRes.json();
@@ -347,7 +347,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       
       try {
         // Fetch seedling distributions for monthly data
-        const associationDistRes = await fetch('${API_BASE_URL}/api/association-seedlings/mao/associations', {
+        const associationDistRes = await fetch(`${API_BASE_URL}/api/association-seedlings/mao/associations', {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -375,7 +375,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
         
         // For distributed data, fetch from CUSAFA endpoint which has all farmer distributions
         try {
-          const farmerDistRes = await fetch('${API_BASE_URL}/api/association-seedlings/cusafa/all-distributions', {
+          const farmerDistRes = await fetch(`${API_BASE_URL}/api/association-seedlings/cusafa/all-distributions', {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -417,7 +417,7 @@ const MAODashboard: React.FC<MAODashboardProps> = ({ onLogout }) => {
       let totalMonitoring = 0;
       
       try {
-        const monitoringRes = await fetch('${API_BASE_URL}/api/mao/monitoring', {
+        const monitoringRes = await fetch(`${API_BASE_URL}/api/mao/monitoring', {
           headers: { Authorization: `Bearer ${token}` }
         });
         

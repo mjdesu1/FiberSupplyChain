@@ -88,11 +88,11 @@ const UserManagement: React.FC = () => {
       
       let endpoint = '';
       if (activeTab === 'farmers') {
-        endpoint = '${API_BASE_URL}/api/mao/farmers';
+        endpoint = `${API_BASE_URL}/api/mao/farmers';
       } else if (activeTab === 'buyers') {
-        endpoint = '${API_BASE_URL}/api/mao/buyers-list';
+        endpoint = `${API_BASE_URL}/api/mao/buyers-list';
       } else if (activeTab === 'associations') {
-        endpoint = '${API_BASE_URL}/api/mao/association-officers';
+        endpoint = `${API_BASE_URL}/api/mao/association-officers';
       }
 
       const response = await fetch(endpoint, {

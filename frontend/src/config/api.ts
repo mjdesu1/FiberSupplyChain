@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../config/api';
  * Get the API base URL from environment variables
  * Falls back to localhost for development
  */
-export const API_BASE_URL = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || `${API_BASE_URL}';
 
 /**
  * API endpoint builder

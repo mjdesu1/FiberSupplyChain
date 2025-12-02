@@ -44,7 +44,7 @@ const ArticleManagement: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('${API_BASE_URL}/api/articles');
+      const response = await fetch(`${API_BASE_URL}/api/articles');
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {
@@ -117,7 +117,7 @@ const ArticleManagement: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const url = editingArticle
         ? `${API_BASE_URL}/api/articles/${editingArticle.article_id}`
-        : '${API_BASE_URL}/api/articles';
+        : `${API_BASE_URL}/api/articles';
       
       const method = editingArticle ? 'PUT' : 'POST';
 

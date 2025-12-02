@@ -45,7 +45,7 @@ const PlantedSeedlings: React.FC = () => {
     setError(null);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/association-seedlings/cusafa/all-distributions', {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/cusafa/all-distributions', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

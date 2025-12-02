@@ -15,7 +15,7 @@ const MaintenanceToggle: React.FC = () => {
 
   const fetchMaintenanceStatus = async () => {
     try {
-      const response = await fetch('${API_BASE_URL}/api/maintenance/status');
+      const response = await fetch(`${API_BASE_URL}/api/maintenance/status');
       const data = await response.json();
       setIsMaintenanceMode(data.maintenanceMode);
       setLoading(false);
@@ -34,7 +34,7 @@ const MaintenanceToggle: React.FC = () => {
     setToggling(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/maintenance/toggle', {
+      const response = await fetch(`${API_BASE_URL}/api/maintenance/toggle', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

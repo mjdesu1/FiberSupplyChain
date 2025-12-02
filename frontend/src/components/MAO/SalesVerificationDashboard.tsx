@@ -81,7 +81,7 @@ const SalesVerificationDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = getAuthToken();
-      const apiUrl = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
+      const apiUrl = import.meta.env.VITE_API_URL || `${API_BASE_URL}';
       
       if (!token) {
         console.error('No authentication token found');
@@ -182,7 +182,7 @@ const SalesVerificationDashboard: React.FC = () => {
     try {
       const token = getAuthToken();
       const userData = getUserData();
-      const apiUrl = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
+      const apiUrl = import.meta.env.VITE_API_URL || `${API_BASE_URL}';
       
       if (!token || !userData) {
         alert('Authentication error. Please log in again.');

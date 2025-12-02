@@ -118,7 +118,7 @@ const AssociationSeedlingManagement: React.FC = () => {
   const fetchAssociations = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/mao/associations', {
+      const response = await fetch(`${API_BASE_URL}/api/mao/associations', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -145,7 +145,7 @@ const AssociationSeedlingManagement: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/association-seedlings/mao/associations', {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/mao/associations', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -319,7 +319,7 @@ const AssociationSeedlingManagement: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const data = await prepareFormDataForSubmission();
       
-      const response = await fetch('${API_BASE_URL}/api/association-seedlings/mao/distribute-to-association', {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/mao/distribute-to-association', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

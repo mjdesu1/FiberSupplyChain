@@ -85,7 +85,7 @@ const BuyerProfile: React.FC = () => {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/buyers/update-profile', {
+      const response = await fetch(`${API_BASE_URL}/api/buyers/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

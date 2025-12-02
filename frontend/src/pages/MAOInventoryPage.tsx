@@ -77,7 +77,7 @@ export default function MAOInventoryPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const response = await fetch('${API_BASE_URL}/api/inventory/inventory/statistics', {
+      const response = await fetch(`${API_BASE_URL}/api/inventory/inventory/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

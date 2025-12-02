@@ -71,10 +71,10 @@ const CUSAFADashboard: React.FC<CUSAFADashboardProps> = ({ onLogout }) => {
       }
 
       const [associationRes, farmerRes] = await Promise.all([
-        fetch('${API_BASE_URL}/api/association-seedlings/association/received', {
+        fetch(`${API_BASE_URL}/api/association-seedlings/association/received', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('${API_BASE_URL}/api/association-seedlings/association/farmer-distributions', {
+        fetch(`${API_BASE_URL}/api/association-seedlings/association/farmer-distributions', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

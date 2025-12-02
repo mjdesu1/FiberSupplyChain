@@ -4,7 +4,6 @@ import { Eye, EyeOff, ArrowLeft, ChevronRight, ChevronLeft, X, Camera, FileText,
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
-const API_URL = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
 
 interface CUSAFAAuthProps {
   onBack: () => void;
@@ -87,7 +86,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       // Get reCAPTCHA v3 token (invisible)
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,7 +164,7 @@ export const CUSAFAAuth: React.FC<CUSAFAAuthProps> = ({ onBack, onLoginSuccess }
       const recaptchaToken = await executeRecaptcha('register');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch(`${API_URL}/api/auth/register/officer`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register/officer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

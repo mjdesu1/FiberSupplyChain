@@ -132,7 +132,7 @@ const FiberDeliveryManager: React.FC = () => {
   const fetchFiberInventory = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/cusafa-inventory', {
+      const response = await fetch(`${API_BASE_URL}/api/cusafa-inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -149,7 +149,7 @@ const FiberDeliveryManager: React.FC = () => {
       
       console.log('🔍 Fetching buyers from API...');
       
-      const response = await fetch('${API_BASE_URL}/api/buyers/all', {
+      const response = await fetch(`${API_BASE_URL}/api/buyers/all', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -189,7 +189,7 @@ const FiberDeliveryManager: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const url = isEditMode && selectedDelivery
         ? `${API_BASE_URL}/api/fiber-deliveries/farmer/${selectedDelivery.delivery_id}`
-        : '${API_BASE_URL}/api/fiber-deliveries/create';
+        : `${API_BASE_URL}/api/fiber-deliveries/create';
       
       const method = isEditMode ? 'PUT' : 'POST';
 

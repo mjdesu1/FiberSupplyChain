@@ -4,7 +4,6 @@ import { Building2, ArrowLeft, ChevronRight, ChevronLeft, Upload, X, Camera, Fil
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { completeLogin } from '../utils/authToken';
 
-const API_URL = import.meta.env.VITE_API_URL || '${API_BASE_URL}';
 
 interface BuyerAuthProps {
   onBack: () => void;
@@ -86,7 +85,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
 
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -164,7 +163,7 @@ export const BuyerAuth: React.FC<BuyerAuthProps> = ({ onBack, onLoginSuccess }) 
       const recaptchaToken = await executeRecaptcha('register');
       const { confirmPassword, ...submitData } = formData;
 
-      const response = await fetch(`${API_URL}/api/auth/register/buyer`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register/buyer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...submitData, recaptchaToken }),

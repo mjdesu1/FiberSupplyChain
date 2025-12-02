@@ -100,7 +100,7 @@ const AssociationInventory: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/association-seedlings/association/received', {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/association/received', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -135,7 +135,7 @@ const AssociationInventory: React.FC = () => {
         throw new Error('Authentication token missing');
       }
 
-      const response = await fetch('${API_BASE_URL}/api/association-seedlings/association/farmers', {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/association/farmers', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -252,7 +252,7 @@ const AssociationInventory: React.FC = () => {
       }
 
       const response = await fetch(
-        '${API_BASE_URL}/api/association-seedlings/association/distribute-to-farmers',
+        `${API_BASE_URL}/api/association-seedlings/association/distribute-to-farmers',
         {
           method: 'POST',
           headers: {

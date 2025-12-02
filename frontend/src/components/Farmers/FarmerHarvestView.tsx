@@ -91,7 +91,7 @@ export default function FarmerHarvestView() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE_URL}/api/harvests/farmer/harvests/statistics', {
+      const response = await fetch(`${API_BASE_URL}/api/harvests/farmer/harvests/statistics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

@@ -111,7 +111,7 @@ const FarmerDashboard: React.FC<FarmerDashboardProps> = ({ onLogout }) => {
     try {
       const token = localStorage.getItem('accessToken');
       // Use the new association seedlings endpoint
-      const response = await fetch('${API_BASE_URL}/api/association-seedlings/farmer/received', {
+      const response = await fetch(`${API_BASE_URL}/api/association-seedlings/farmer/received', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();

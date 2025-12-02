@@ -29,7 +29,7 @@ const MaintenanceChecker: React.FC<MaintenanceCheckerProps> = ({ children }) => 
       setIsSuperAdmin(superAdmin);
 
       // Check maintenance status from API
-      const response = await fetch('${API_BASE_URL}/api/maintenance/status');
+      const response = await fetch(`${API_BASE_URL}/api/maintenance/status');
       const data = await response.json();
       
       setIsMaintenanceMode(data.maintenanceMode);

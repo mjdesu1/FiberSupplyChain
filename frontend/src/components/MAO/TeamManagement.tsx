@@ -48,7 +48,7 @@ const TeamManagement: React.FC = () => {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch('${API_BASE_URL}/api/team');
+      const response = await fetch(`${API_BASE_URL}/api/team');
       const data = await response.json();
       setTeam(data.team || []);
     } catch (error) {
@@ -121,7 +121,7 @@ const TeamManagement: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       const url = editingMember
         ? `${API_BASE_URL}/api/team/${editingMember.member_id}`
-        : '${API_BASE_URL}/api/team';
+        : `${API_BASE_URL}/api/team';
       
       const method = editingMember ? 'PUT' : 'POST';
 

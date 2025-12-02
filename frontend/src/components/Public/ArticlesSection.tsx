@@ -24,7 +24,7 @@ const ArticlesSection: React.FC = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('${API_BASE_URL}/api/articles');
+      const response = await fetch(`${API_BASE_URL}/api/articles');
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (error) {

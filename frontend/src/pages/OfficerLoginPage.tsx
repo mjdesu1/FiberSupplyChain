@@ -33,7 +33,7 @@ export const OfficerLoginPage: React.FC<OfficerLoginPageProps> = ({ onLoginSucce
       // Get reCAPTCHA v3 token
       const recaptchaToken = await executeRecaptcha('officer_login');
 
-      const response = await fetch('${API_BASE_URL}/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

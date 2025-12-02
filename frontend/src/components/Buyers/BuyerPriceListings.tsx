@@ -50,7 +50,7 @@ const BuyerPriceListings: React.FC = () => {
   const fetchListings = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/buyer-listings', {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-listings', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();

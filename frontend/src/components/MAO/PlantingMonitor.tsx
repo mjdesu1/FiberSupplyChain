@@ -80,7 +80,7 @@ const PlantingMonitor: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('${API_BASE_URL}/api/seedlings/all?status=planted', {
+      const response = await fetch(`${API_BASE_URL}/api/seedlings/all?status=planted', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

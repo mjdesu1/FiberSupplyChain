@@ -79,7 +79,7 @@ const FiberPurchaseForm: React.FC = () => {
         imageUrl: null // TODO: Handle image upload separately if needed
       };
 
-      const response = await fetch('${API_BASE_URL}/api/buyer-purchases', {
+      const response = await fetch(`${API_BASE_URL}/api/buyer-purchases', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
