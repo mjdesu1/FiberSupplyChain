@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Users, ArrowLeft } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { completeLogin } from '../utils/authToken';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface OfficerAuthProps {
   onBack: () => void;
   onLoginSuccess: () => void;
 }
 
-export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess }) => {
+export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onLoginSuccess }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [formData, setFormData] = useState<any>({
     email: '',
@@ -32,7 +34,7 @@ export const OfficerAuth: React.FC<OfficerAuthProps> = ({ onBack, onLoginSuccess
       // Get reCAPTCHA v3 token (invisible)
       const recaptchaToken = await executeRecaptcha('login');
 
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
